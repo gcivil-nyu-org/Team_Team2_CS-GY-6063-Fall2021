@@ -1,8 +1,8 @@
 <h1>Welcome to Nature's call</h1>
 {% block content %}
-<form action="yelpSearch/"method="POST">
-	{%csrf_token%}
-	{{ form.as_p}}
+<form action="search_restroom/" method="POST">
+	{% csrf_token %}
+	{{ form.as_p }}
 	<input type="submit" value="Search">
 </form>
 {% endblock %}

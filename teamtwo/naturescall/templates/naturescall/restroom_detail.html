@@ -3,15 +3,12 @@
     <h4>Restroom ID = {{ res.yelp_data.db_id }}</h4>
     <h4>Yelp ID = {{ res.yelp_data.id }}</h4>
     <h4>Restroom Name = {{ res.yelp_data.alias }}</h4>
-{#    <h4>Address = {{ res.yelp_data.location.display_address}}</h4>#}
-    <h4>Address = {{ res.addr}}</h4>
+    <h4>Address = {{ res.addr }}</h4>
     <h4>Rating = {{ res.yelp_data.rating }} </h4>
     <h4>Accessible = {{ res.yelp_data.Accessible }} </h4>
     <h4>FamilyFriendly = {{ res.yelp_data.FamilyFriendly }} </h4>
     <h4>TransactionRequired = {{ res.yelp_data.TransactionRequired }} </h4>
     <h4>Description: {{ res.desc }}</h4>
-
-
 {%  else %}
     <h3>Location Not In Database</h3>
 {% endif %}

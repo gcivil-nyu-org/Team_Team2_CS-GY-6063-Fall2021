@@ -1,7 +1,9 @@
 from django import forms
 from .models import Restroom
+
+
 class LocationForm(forms.Form):
-    location= forms.CharField( widget= forms.TextInput, label='Search Location')
+    location= forms.CharField(widget= forms.TextInput, label= 'Search Location')
 
 # form for displaying yelp search
 
