@@ -13,6 +13,7 @@
                 <th><label for='yelp_id'><h3>YelpBusinessID</h3></label></th>
                 <th><label for='restroom'><h3>Restroom</h3></label></th>
                 <th><label for='address'><h3>Address</h3></label></th>
+                <th><label for='distance'><h3>Distance(meter)</h3></label></th>
                 <th><label for='rating'><h3>OurRating</h3></label></th>
             </tr>
             {% for d in data %}
@@ -26,6 +27,7 @@
                         {% endif %}
                     </td>
                     <td align='right'>{{ d.addr }} </td>
+                    <td align='right'>{{ d.distance }} </td>
                     <td align='center'>
                         {% if not d.db_id %}
                             <a href="{% url 'naturescall:add_restaurant' d.id %}">Add Restroom</a>

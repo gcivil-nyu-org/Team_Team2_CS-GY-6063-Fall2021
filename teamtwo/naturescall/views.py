@@ -49,6 +49,7 @@ def search_restroom(request):
 
     # Load rating data from our database
     for restroom in data:
+        restroom['distance'] = int(restroom['distance'])
         print(restroom['distance'])
         r_id = restroom['id']
         querySet = Restroom.objects.filter(yelp_id=r_id)
