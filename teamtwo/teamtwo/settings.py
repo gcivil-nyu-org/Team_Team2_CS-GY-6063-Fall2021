@@ -142,5 +142,5 @@ EMAIL_HOST_PASSWORD = str(os.getenv("EMAIL_PASSWORD"))
 EMAIL_PORT = 587
 
 # Activate Django-Heroku.
-django_heroku.settings(locals())
-# django_heroku.settings(locals(), test_runner=False)
+# django_heroku.settings(locals())
+django_heroku.settings(locals(), test_runner=False)
