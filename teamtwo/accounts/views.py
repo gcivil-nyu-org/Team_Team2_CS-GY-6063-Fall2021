@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
+from naturescall.models import Restroom, Rating
 
 # from django.contrib.auth import login, authenticate
 from .forms import SignupForm
@@ -14,6 +15,8 @@ from django.utils.encoding import force_bytes, force_text
 from django.core.mail import EmailMessage
 from .forms import ProfileUpdateForm, UserUpdateForm
 from django.contrib.auth.decorators import login_required
+
+
 # Create your views here.
 def signup(request):
     if request.method == "POST":
@@ -82,8 +85,12 @@ def view_profile(request):
     else:
         u_form = UserUpdateForm(instance=request.user)
         p_form = ProfileUpdateForm(instance=request.user.profile, initial={"profilename": request.user.username})
+    
+    current_user = request.user
+    query_set = Rating.objects.filter(user_id=current_user)
     context = {
             'u_form': u_form,
-            'p_form': p_form
+            'p_form': p_form,
+            'ratings': query_set
             }
     return render(request, "accounts/profile.html", context)
