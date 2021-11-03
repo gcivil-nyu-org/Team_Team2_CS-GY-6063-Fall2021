@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
-from naturescall.models import Restroom, Rating
+from naturescall.models import Rating
 
 # from django.contrib.auth import login, authenticate
 from .forms import SignupForm
