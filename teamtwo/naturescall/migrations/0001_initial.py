@@ -16,26 +16,63 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Restroom',
+            name="Restroom",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('yelp_id', models.CharField(max_length=100)),
-                ('description', models.TextField()),
-                ('last_modified', models.DateTimeField(auto_now_add=True)),
-                ('accessible', models.BooleanField(default=False)),
-                ('family_friendly', models.BooleanField(default=False)),
-                ('transaction_not_required', models.BooleanField(default=False)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("yelp_id", models.CharField(max_length=100)),
+                ("description", models.TextField()),
+                ("last_modified", models.DateTimeField(auto_now_add=True)),
+                ("accessible", models.BooleanField(default=False)),
+                ("family_friendly", models.BooleanField(default=False)),
+                ("transaction_not_required", models.BooleanField(default=False)),
             ],
         ),
         migrations.CreateModel(
-            name='Rating',
+            name="Rating",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('rating', models.PositiveSmallIntegerField(default=3, validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(5)])),
-                ('headline', models.TextField(max_length=65)),
-                ('comment', models.TextField(max_length=500)),
-                ('restroom_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='naturescall.restroom')),
-                ('user_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "rating",
+                    models.PositiveSmallIntegerField(
+                        default=3,
+                        validators=[
+                            django.core.validators.MinValueValidator(1),
+                            django.core.validators.MaxValueValidator(5),
+                        ],
+                    ),
+                ),
+                ("headline", models.TextField(max_length=65)),
+                ("comment", models.TextField(max_length=500)),
+                (
+                    "restroom_id",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="naturescall.restroom",
+                    ),
+                ),
+                (
+                    "user_id",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

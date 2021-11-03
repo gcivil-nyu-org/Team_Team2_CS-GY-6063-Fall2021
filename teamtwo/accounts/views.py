@@ -71,21 +71,24 @@ def activate(request, uidb64, token):
         messages.error(request, "Activation link is invalid!")
         return HttpResponseRedirect(reverse("naturescall:index"))
 
+
 @login_required
 def view_profile(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         u_form = UserUpdateForm(request.POST, instance=request.user)
-        p_form = ProfileUpdateForm(request.POST,instance=request.user.profile)
+        p_form = ProfileUpdateForm(request.POST, instance=request.user.profile)
         if u_form.is_valid() and p_form.is_valid():
             u_form.save()
             p_form.save()
-            msg= 'Your account has been updated!'
-            messages.success(request, f'{msg}')
+            msg = "Your account has been updated!"
+            messages.success(request, f"{msg}")
             return HttpResponseRedirect(reverse("naturescall:index"))
     else:
         u_form = UserUpdateForm(instance=request.user)
-        p_form = ProfileUpdateForm(instance=request.user.profile, initial={"profilename": request.user.username})
-    
+        p_form = ProfileUpdateForm(
+            instance=request.user.profile,
+            initial={"profilename": request.user.username},
+        )
     current_user = request.user
     query_set = Rating.objects.filter(user_id=current_user)
     context = {

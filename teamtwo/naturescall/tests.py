@@ -1,7 +1,8 @@
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
-from .models import Restroom
+from django.contrib.messages import get_messages
+from .models import Restroom, Rating
 import os
 
 api_key = str(os.getenv("yelp_key"))
@@ -168,12 +169,15 @@ class ViewTests(TestCase):
         """
         response = self.client.post(
             reverse("accounts:signup"),
-            data={"username": "test_user",
-                  "email": "test_user@email.com",
-                  "first_name": "test",
-                  "last_name": "user",
-                  "password1": "BDbdKDwpSt",
-                  "password2": "BDbdKDwpSt"})
+            data={
+                "username": "test_user",
+                "email": "test_user@email.com",
+                "first_name": "test",
+                "last_name": "user",
+                "password1": "BDbdKDwpSt",
+                "password2": "BDbdKDwpSt",
+            },
+        )
         all_users = User.objects.filter(id=1)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(len(all_users), 1)
@@ -184,12 +188,15 @@ class ViewTests(TestCase):
         """
         response = self.client.post(
             reverse("accounts:signup"),
-            data={"username": "test_user",
-                  "email": "test_user@email.com",
-                  "first_name": "test",
-                  "last_name": "user",
-                  "password1": "BDbdKDwpSt",
-                  "password2": "BDbdKDwpStX"})
+            data={
+                "username": "test_user",
+                "email": "test_user@email.com",
+                "first_name": "test",
+                "last_name": "user",
+                "password1": "BDbdKDwpSt",
+                "password2": "BDbdKDwpStX",
+            },
+        )
         self.assertContains(response, "Unsuccessful registration. Invalid information.")
 
     def test_invalid_verification_link(self):
@@ -199,3 +206,88 @@ class ViewTests(TestCase):
         response = self.client.get(reverse("accounts:activate", args=(1, 1)))
         self.assertEqual(response.status_code, 302)
 
+    def test_get_rating_one_restroom(self):
+        """
+        Once a restroom is added using create, it should be
+        visible via the rate_restroom link
+        """
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        create_restroom(yelp_id, desc)
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        response = self.client.get(reverse("naturescall:rate_restroom", args=(1,)))
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_rating_one_restroom(self):
+        """
+        Once a restroom is added using create, it should be
+        rateable using the restroom_detail link
+        """
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        create_restroom(yelp_id, desc)
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        response = self.client.post(
+            reverse("naturescall:rate_restroom", args=(1,)),
+            data={
+                "rating": "4", "headline": "headline1", "comment": "comment1",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(len(Rating.objects.all()), 1)
+        self.assertEqual(Rating.objects.all()[0].headline, "headline1")
+
+    def test_rating_previously_rated_restroom(self):
+        """
+        Once a restroom has been rated, the same user should not be able
+        to rate it again
+        """
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        Rating.objects.create(
+            restroom_id=rr,
+            user_id=user,
+            rating="4",
+            headline="headline1",
+            comment="comment1",
+        )
+        response = self.client.get(reverse("naturescall:rate_restroom", args=(1,)))
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(len(Rating.objects.all()), 1)
+        self.assertEqual(Rating.objects.all()[0].headline, "headline1")
+        self.assertIn(messages[0], "Sorry, You have already rated this restroom!!")
+
+    def test_restroom_rating_calculation(self):
+        """
+        A restroom's rating should be the average of all users' ratings
+        """
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        user1 = User.objects.create_user("Jon1", "jon1@email.com")
+        user2 = User.objects.create_user("Jon2", "jon2@email.com")
+        self.client.force_login(user=user1)
+        Rating.objects.create(
+            restroom_id=rr,
+            user_id=user1,
+            rating="1",
+            headline="headline1",
+            comment="comment1",
+        )
+        self.client.force_login(user=user2)
+        Rating.objects.create(
+            restroom_id=rr,
+            user_id=user2,
+            rating="4",
+            headline="headline2",
+            comment="comment2",
+        )
+        response = self.client.get(reverse("naturescall:restroom_detail", args=(1,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Rating: 2.5")

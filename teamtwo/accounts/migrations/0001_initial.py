@@ -15,14 +15,31 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Profile',
+            name="Profile",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('profilename', models.CharField(default='naturescall member', max_length=50)),
-                ('accessible', models.BooleanField(default=False)),
-                ('family_friendly', models.BooleanField(default=False)),
-                ('transaction_not_required', models.BooleanField(default=False)),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "profilename",
+                    models.CharField(default="naturescall member", max_length=50),
+                ),
+                ("accessible", models.BooleanField(default=False)),
+                ("family_friendly", models.BooleanField(default=False)),
+                ("transaction_not_required", models.BooleanField(default=False)),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

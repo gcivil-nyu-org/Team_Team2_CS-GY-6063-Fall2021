@@ -1,0 +1,15 @@
+{% extends  "naturescall/index.html" %}
+<!-- no search bar in the add_res page -->
+{% block form %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+	<h2>You are entering rating for restroom</h2>
+	<form action="" method="POST">
+		{%csrf_token%}
+		{{form.as_p}}
+		<input class="btn btn-primary" type= "submit" value = "Submit">
+	</form>
+</div>
+{% endblock %}

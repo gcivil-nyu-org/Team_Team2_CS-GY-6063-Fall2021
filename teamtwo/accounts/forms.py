@@ -18,12 +18,19 @@ class SignupForm(UserCreationForm):
             "password2",
         )
 
+
 class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['profilename', 'accessible', 'family_friendly', 'transaction_not_required']
+        fields = [
+            "profilename",
+            "accessible",
+            "family_friendly",
+            "transaction_not_required",
+        ]
+
 
 class UserUpdateForm(forms.ModelForm):
     class Meta:
-        model= User
-        fields= ["email"]
+        model = User
+        fields = ["email"]

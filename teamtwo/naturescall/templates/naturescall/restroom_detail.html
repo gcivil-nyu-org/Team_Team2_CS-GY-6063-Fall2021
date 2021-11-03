@@ -14,12 +14,25 @@
 
 {% block content %}
 
+
 <div class="container-fluid">
       <img class="img-fluid" src={{res.yelp_data.image_url}} alt="Card image cap" style= "width:100%; height:15vw; object-fit: cover;">
 </div>
 
 <div class="container">
   <div class="col d-flex justify-content-center">
+
+    {% if messages %}
+    <div class="alert alert-success" role="alert">
+      <ul class="messages">
+        {% for message in messages %}
+        <h4{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</h4>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+
     <div class="card">
       <div class="card-body">
         <h2 class="card-title">
@@ -35,9 +48,12 @@
           {% endif %}
         </h2>
         <h4 class="card-text"> Address: {{res.addr}}</h4>
-{#        <h4 class="card-text">Rating: {{res.yelp_data.rating}} </h4>#}
+        <h4 class="card-text">Rating: {{res.yelp_data.rating}} </h4>
+        <!--
         <h4 class="card-text">Rating: To Be Determined </h4>
+        -->
         <h4 class="card-text">Description: {{res.desc}} </h4>
+        <a href="{% url 'naturescall:rate_restroom' res.yelp_data.db_id %}" class="btn btn-primary">Rate Now!</a>
       </div>
     </div>
   </div>

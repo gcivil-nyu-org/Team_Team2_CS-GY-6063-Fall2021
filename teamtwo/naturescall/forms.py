@@ -1,5 +1,5 @@
 from django import forms
-from .models import Restroom
+from .models import Restroom, Rating
 
 
 class LocationForm(forms.Form):
@@ -28,3 +28,14 @@ class AddRestroom(forms.ModelForm):
                 ["Description Should Contain a minimum of 10 characters"]
             )
         return self.cleaned_data
+
+
+# form for rating and commenting a restroom
+class AddRating(forms.ModelForm):
+    class Meta:
+        model = Rating
+        fields = [
+            "rating",
+            "headline",
+            "comment",
+        ]
