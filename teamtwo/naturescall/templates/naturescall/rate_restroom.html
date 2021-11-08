@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="container">
-	<h2>You are entering rating for restroom</h2>
+	<h2>{{ title }}</h2>
 	<form action="" method="POST">
 		{%csrf_token%}
 		{{form.as_p}}

@@ -19,7 +19,7 @@ class ProfileTests(TestCase):
 
     def test_post_profile(self):
         """
-        A user goes to the profile page and is able updates the user
+        A user goes to the profile page and is able to update the user
         information
         """
         user = User.objects.create_user("Howard", "howard@gmail.com")

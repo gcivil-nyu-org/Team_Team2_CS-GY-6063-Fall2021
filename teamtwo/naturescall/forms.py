@@ -10,9 +10,20 @@ class LocationForm(forms.Form):
 
 # form for adding information about restroom
 class AddRestroom(forms.ModelForm):
+    title = forms.CharField(
+        disabled=False,
+        label="Restroom",
+        widget=forms.TextInput(attrs={"size": 80, "readonly": True}),
+    )
+    yelp_id = forms.SlugField(
+        disabled=False, widget=forms.HiddenInput()
+    )
+    description = forms.CharField(widget=forms.TextInput(attrs={"size": 80}))
+
     class Meta:
         model = Restroom
         fields = [
+            "title",
             "yelp_id",
             "description",
             "accessible",
@@ -32,6 +43,9 @@ class AddRestroom(forms.ModelForm):
 
 # form for rating and commenting a restroom
 class AddRating(forms.ModelForm):
+    headline = forms.CharField(widget=forms.TextInput(attrs={"size": 80}))
+    comment = forms.CharField(widget=forms.TextInput(attrs={"size": 80}))
+
     class Meta:
         model = Rating
         fields = [

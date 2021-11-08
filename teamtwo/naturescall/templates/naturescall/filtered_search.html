@@ -1,4 +1,13 @@
 {% extends "naturescall/index.html" %}
+
+{% block form %}
+<form class="form-inline my-2 my-lg-0" method="POST" action= "/naturescall/search_restroom/">
+	{% csrf_token %}
+<input class="form-control mr-sm-2" type="search" placeholder="Search Location" name = "searched" required="required">
+<button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+</form>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
 	<p>
@@ -54,4 +63,3 @@
 	{% endif %}
 </div>
 {% endblock %}
-

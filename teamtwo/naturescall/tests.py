@@ -74,10 +74,11 @@ class ViewTests(TestCase):
         user = User.objects.create_user("Jon", "jon@email.com")
         self.client.force_login(user=user)
         desc = "TEST DESCRIPTION"
+        title = "TEST TITLE"
         yelp_id = "E6h-sMLmF86cuituw5zYxw"
         response = self.client.post(
             reverse("naturescall:add_restroom", args=(1,)),
-            data={"yelp_id": yelp_id, "description": desc},
+            data={"yelp_id": yelp_id, "description": desc, "title": title},
         )
         response2 = self.client.get(reverse("naturescall:restroom_detail", args=(1,)))
         self.assertEqual(response.status_code, 302)
@@ -162,6 +163,17 @@ class ViewTests(TestCase):
         yelp_id = "E6h-sMLmF86cuituw5zYxw"
         response = self.client.get(reverse("naturescall:add_restroom", args=(yelp_id,)))
         self.assertEqual(response.status_code, 200)
+
+    def test_get_request_add_restroom_logged_in_invalid_id(self):
+        """
+        A get request to the add_restroom page should yield a
+        404 error if the user is logged in but supplies an invalid yelp ID
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        yelp_id = "E6h-sMLmF86cuituw5zYxwXXXXXX"
+        response = self.client.get(reverse("naturescall:add_restroom", args=(yelp_id,)))
+        self.assertEqual(response.status_code, 404)
 
     def test_account_creation_valid_form(self):
         """
@@ -362,3 +374,39 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["data"]), 1)
         self.assertEqual(len(response.context["data1"]), 19)
+
+    def test_newly_created_restroom_with_no_rating(self):
+        '''
+        A newly created restroom should have no rating
+        '''
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        desc = "Testing newly created restroom"
+        new_restroom = create_restroom(yelp_id, desc)
+        self.assertEqual(len(Rating.objects.filter(restroom_id=new_restroom.pk)), 0)
+
+    def test_multiple_ratings_shown_in_restroom_detail(self):
+        '''
+        If there are multiple ratings created
+        '''
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        desc = "Testing newly created restroom"
+        new_restroom = create_restroom(yelp_id, desc)
+        user1 = User.objects.create_user("Simon1", "simon1@email.com")
+        user2 = User.objects.create_user("Simon2", "simon2@email.com")
+        self.client.force_login(user=user1)
+        Rating.objects.create(
+            restroom_id=new_restroom,
+            user_id=user1,
+            rating="1",
+            headline="headline1",
+            comment="comment1",
+        )
+        self.client.force_login(user=user2)
+        Rating.objects.create(
+            restroom_id=new_restroom,
+            user_id=user2,
+            rating="4",
+            headline="headline2",
+            comment="comment2",
+        )
+        self.assertEqual(len(Rating.objects.filter(restroom_id=new_restroom.pk)), 2)

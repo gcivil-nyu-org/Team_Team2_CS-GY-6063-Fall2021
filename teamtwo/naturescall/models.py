@@ -2,8 +2,6 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 
-# Added fiels Description, Last_Modified, Images fiels
-
 
 class Restroom(models.Model):
     """Class to hold restroom entries, including their
@@ -12,14 +10,12 @@ class Restroom(models.Model):
     # Set yelp_id max length to 100 based on this:
     # https://github.com/Yelp/yelp-fusion/issues/183
     yelp_id = models.CharField(max_length=100)
-    # rating = models.FloatField(
-    #     default=0.0, validators=[MinValueValidator(0.0), MaxValueValidator(5.0)]
-    # )
     description = models.TextField(blank=False, null=False)
     last_modified = models.DateTimeField(auto_now_add=True)
     accessible = models.BooleanField(default=False)
     family_friendly = models.BooleanField(default=False)
     transaction_not_required = models.BooleanField(default=False)
+    title = models.CharField(blank=False, max_length=255, default="Restroom")
 
 
 class Rating(models.Model):

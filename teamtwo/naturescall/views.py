@@ -101,10 +101,8 @@ def search_restroom(request):
             for restroom in data1:
                 if restroom["db_id"] == obj.id:
                     data.append(restroom)
-                    print(data)
                 else:
                     data2.append(restroom)
-                    print(data2)
         context["tableFilter"] = tableFilter
         context["data"] = data
         context["data1"] = data2
@@ -144,13 +142,9 @@ def filter_restroom(request):
         for restroom in data1:
             if restroom["db_id"] == obj.id:
                 data.append(restroom)
-                print(data)
             else:
                 data2.append(restroom)
-    context = {}
-    context["tableFilter"] = tableFilter
-    context["data"] = data
-    context["data1"] = data2
+    context = {"tableFilter": tableFilter, "data": data, "data1": data2}
     return render(request, "naturescall/filtered_search.html", context)
 
 
@@ -170,7 +164,7 @@ def rate_restroom(request, r_id):
             messages.success(request, f"{msg}")
             return redirect("naturescall:restroom_detail", r_id=current_restroom.id)
     else:
-        # check for redundent rating
+        # check for redundant rating
         querySet = Rating.objects.filter(restroom_id=r_id, user_id=current_user)
         if querySet:
             msg = "Sorry, You have already rated this restroom!!"
@@ -178,7 +172,7 @@ def rate_restroom(request, r_id):
             return redirect("naturescall:restroom_detail", r_id=current_restroom.id)
 
     form = AddRating()
-    context = {"form": form}
+    context = {"form": form, "title": current_restroom.title}
     return render(request, "naturescall/rate_restroom.html", context)
 
 
@@ -195,9 +189,14 @@ def add_restroom(request, r_id):
             return render(request, "naturescall/add_restroom.html", {"form": f})
     else:
         k = get_business(api_key, r_id)
+        if k.get("error"):
+            raise Http404("Restroom does not exist")
         context = {}
         name = k["name"]
-        form = AddRestroom(initial={"yelp_id": r_id})
+        title = (
+            k["name"] + " " + k["location"]["address1"] + " " + k["location"]["city"]
+        )
+        form = AddRestroom(initial={"yelp_id": r_id, "title": title})
         context["form"] = form
         context["name"] = name
         return render(request, "naturescall/add_restroom.html", context)
@@ -205,7 +204,6 @@ def add_restroom(request, r_id):
 
 def calculate_rating(r_id):
     querySet = Rating.objects.filter(restroom_id=r_id)
-    print(querySet)
     if querySet:
         average_rating = 0
         for rating in querySet.values():
@@ -213,7 +211,7 @@ def calculate_rating(r_id):
         average_rating = average_rating / len(querySet)
         return round(average_rating, 1)
     else:
-        return "be to rated"
+        return "N/A"
 
 
 # The page for showing one restroom details
@@ -239,7 +237,8 @@ def restroom_detail(request, r_id):
     else:
         raise Http404("Restroom does not exist")
 
-    context = {"res": res}
+    ratings = Rating.objects.filter(restroom_id=r_id)
+    context = {"res": res, "ratings": ratings}
     return render(request, "naturescall/restroom_detail.html", context)
 
 
