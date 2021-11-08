@@ -376,18 +376,18 @@ class ViewTests(TestCase):
         self.assertEqual(len(response.context["data1"]), 19)
 
     def test_newly_created_restroom_with_no_rating(self):
-        '''
+        """
         A newly created restroom should have no rating
-        '''
+        """
         yelp_id = "E6h-sMLmF86cuituw5zYxw"
         desc = "Testing newly created restroom"
         new_restroom = create_restroom(yelp_id, desc)
         self.assertEqual(len(Rating.objects.filter(restroom_id=new_restroom.pk)), 0)
 
     def test_multiple_ratings_shown_in_restroom_detail(self):
-        '''
+        """
         If there are multiple ratings created
-        '''
+        """
         yelp_id = "E6h-sMLmF86cuituw5zYxw"
         desc = "Testing newly created restroom"
         new_restroom = create_restroom(yelp_id, desc)
