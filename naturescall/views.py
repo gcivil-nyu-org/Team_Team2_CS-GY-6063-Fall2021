@@ -81,7 +81,7 @@ def search_restroom(request):
         context["data"] = data
         context["tableFilter"] = tableFilter
         context["map"] = url
-        request.session['search_location'] = location
+        request.session["search_location"] = location
         return render(request, "naturescall/search_restroom.html", context)
     else:
         dbRestroom = Restroom.objects.all()
@@ -132,7 +132,7 @@ def search_restroom(request):
         context["data"] = data
         context["data1"] = data2
         context["map"] = url
-        request.session['search_location'] = location
+        request.session["search_location"] = location
         return render(request, "naturescall/filtered_search.html", context)
 
 
@@ -182,7 +182,7 @@ def filter_restroom(request):
                 loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
     url = str(google_url(loc, loc1, width=600, height=740, center=location, key=map))
     context = {"tableFilter": tableFilter, "data": data, "data1": data2, "map": url}
-    request.session['search_location'] = location
+    request.session["search_location"] = location
     return render(request, "naturescall/filtered_search.html", context)
 
 
@@ -276,7 +276,7 @@ def restroom_detail(request, r_id):
         raise Http404("Restroom does not exist")
 
     ratings = Rating.objects.filter(restroom_id=r_id)
-    context = {"res": res, "ratings": ratings, "map_key" : map_embedded_key}
+    context = {"res": res, "ratings": ratings, "map_key": map_embedded_key}
     return render(request, "naturescall/restroom_detail.html", context)
 
 
