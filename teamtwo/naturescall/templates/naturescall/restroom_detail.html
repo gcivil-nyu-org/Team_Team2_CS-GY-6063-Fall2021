@@ -32,7 +32,6 @@
     </div>
     {% endif %}
 
-
     <div class="card">
       <div class="card-body">
         <h2 class="card-title">
@@ -56,6 +55,25 @@
   </div>
 </div>
 <br>
+
+<div class="col d-flex justify-content-center">
+   <!-- map card -->
+       <iframe
+           width="600"
+           height="450"
+           style="border:0"
+           loading="lazy"
+           allowfullscreen
+           src="https://www.google.com/maps/embed/v1/directions?key={{map_key}}
+             &origin={{request.session.search_location}}
+             &destination= {{res.addr}}
+             &mode=walking">
+       </iframe>
+    <!-- end of map -->
+ </div>
+
+
+
 <div class="container">
   <div class="card">
     <div class="card-body">
