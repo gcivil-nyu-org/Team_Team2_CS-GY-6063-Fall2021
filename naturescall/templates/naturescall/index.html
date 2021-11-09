@@ -8,13 +8,13 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 		<!-- Bootstrap CSS -->
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-		<title>Naturescall</title>
+		<title>Nature's Call</title>
 	</head>
 	<body>
 		<!-- navbar -->
 		<nav class = "navbar navbar-expand-lg navbar-dark bg-dark">
 			{% block home %}
-			<a class="navbar-brand" href="/naturescall">Naturescall</a>
+			<a class="navbar-brand" href="/naturescall">Nature's Call</a>
 			{% endblock %}
 		  <ul class="navbar-nav mr-auto">
 				{%if not user.is_authenticated %}
@@ -37,7 +37,7 @@
         </div>
       </li>
 				<li class="nav-item">
-					<a class="nav-link" href="{%url 'logout'%}" style="color:DodgerBlue;">Logout</a>
+					<a class="nav-link" href="{%url 'logout'%}" style="color:#2cdf33;">Logout</a>
 				</li>
 				{%endif%}
 		  </ul>

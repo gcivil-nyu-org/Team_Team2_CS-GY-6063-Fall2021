@@ -32,7 +32,6 @@
     </div>
     {% endif %}
 
-
     <div class="card">
       <div class="card-body">
         <h2 class="card-title">
@@ -49,12 +48,43 @@
         </h2>
         <h4 class="card-text"> Address: {{res.addr}}</h4>
         <h4 class="card-text">Rating: {{res.yelp_data.rating}} </h4>
-        <!--
-        <h4 class="card-text">Rating: To Be Determined </h4>
-        -->
         <h4 class="card-text">Description: {{res.desc}} </h4>
         <a href="{% url 'naturescall:rate_restroom' res.yelp_data.db_id %}" class="btn btn-primary">Rate Now!</a>
       </div>
+    </div>
+  </div>
+</div>
+<br>
+
+<div class="col d-flex justify-content-center">
+   <!-- map card -->
+       <iframe
+           width="600"
+           height="450"
+           style="border:0"
+           loading="lazy"
+           allowfullscreen
+           src="https://www.google.com/maps/embed/v1/directions?key={{map_key}}
+             &origin={{request.session.search_location}}
+             &destination= {{res.addr}}
+             &mode=walking">
+       </iframe>
+    <!-- end of map -->
+ </div>
+
+
+
+<div class="container">
+  <div class="card">
+    <div class="card-body">
+      <h2 class="card-title">Ratings</h2>
+      {% for rating in ratings %}
+        <h4>{{rating.user_id}}</h4>
+        Rating: {{rating.rating}}<br>
+        Headline: {{rating.headline}}<br>
+        Comment: {{rating.comment}}<br>
+        <br>
+      {% endfor %}
     </div>
   </div>
 </div>

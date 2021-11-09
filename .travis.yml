@@ -1,6 +1,8 @@
 language: python
+before_install:
+  - sed '/django-heroku/d' requirements.txt > requirements-build.txt
 install:
-  - pip install -r requirements.txt
+  - pip install -r requirements-build.txt
 # build multiple branches
 branches:
   only:
@@ -8,7 +10,7 @@ branches:
   - main
   - travis
 before_script:
-  - cd ./teamtwo
+#  - cd ./teamtwo
   - python manage.py makemigrations
   - python manage.py migrate
 script:

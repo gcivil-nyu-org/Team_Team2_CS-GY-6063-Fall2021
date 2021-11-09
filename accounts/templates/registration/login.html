@@ -1,7 +1,7 @@
+
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 	<head>
-		<!-- Required meta tags -->
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 		<!-- Bootstrap CSS -->
@@ -9,30 +9,23 @@
 		<title>Naturescal</title>
 	</head>
 	<body>
-		<!-- navbar -->
 		<nav class = "navbar navbar-expand-lg navbar-dark bg-dark">
 			{% block home %}
-			<a class="navbar-brand" href="/naturescall">Naturescall</a>
+			<a class="navbar-brand" href="/naturescall">Nature's Call</a>
 			{% endblock %}
 		</nav>
-		<nav class = "container">
-			<h1>Welcome to Natures's Call</h1>
-			{% if messages %}
-			<ul class="messages">
-				 {% for message in messages %}
-				 <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-					{% endfor %}
-			</ul>
-			{% endif %}
+		<div class="container">
+			<h1>Login</h1>
 			{% block content %}
-			<h1>Register</h1>
-			<form action="" method="POST">
+			<form method="POST">
 				{% csrf_token %}
 				{{ form.as_p }}
-				<input  class="btn btn-primary" type="submit" value="Register">
+				<input class="btn btn-primary" type="submit" value="Login">
 			</form>
-			<p>If you already have an account, <a href="{% url 'login'%}">login</a> instead.</p>
+			<br>
+			<p>Don't have an account? <a href="{% url 'accounts:signup'%}">Create an account</a></p>
+			<p>Forget Password? <a href="{% url 'password_reset'%}">Reset Password</a></p>
 			{% endblock%}
-		</nav>
+		</div>
 	</body>
 </html>

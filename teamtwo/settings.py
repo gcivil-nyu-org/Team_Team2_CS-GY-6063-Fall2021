@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
-import django_heroku
+# import django_heroku
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -144,4 +144,12 @@ EMAIL_PORT = 587
 
 # Activate Django-Heroku.
 # django_heroku.settings(locals())
-django_heroku.settings(locals(), test_runner=False)
+# django_heroku.settings(locals(), test_runner=False)
+# Try to import django-heroku depending on Travis or Heroku
+try:
+    # Configure Django App for Heroku.
+    import django_heroku
+
+    django_heroku.settings(locals())
+except ImportError:
+    found = False

@@ -8,7 +8,7 @@ media
 .DS_Store
 
 # migration files #
-0*.py
+#0*.py
 
 # Backup files #
 *.bak

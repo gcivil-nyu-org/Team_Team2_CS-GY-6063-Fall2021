@@ -8,6 +8,7 @@ import requests
 from django.contrib.auth.decorators import login_required
 from .filters import RestroomFilter
 from django.contrib import messages
+from urllib.parse import urlencode
 
 # import argparse
 # import json
@@ -21,6 +22,7 @@ import os
 from django.urls import reverse
 
 api_key = str(os.getenv("yelp_key"))
+map_embedded_key = str(os.getenv("map_embedded"))
 
 API_HOST = "https://api.yelp.com"
 SEARCH_PATH = "/v3/businesses/search"
@@ -42,10 +44,13 @@ def search_restroom(request):
     # form = LocationForm(request.POST or None)
     # location = request.POST["location"]
     if request.POST.get("searched") is not None:
+        map = str(os.getenv("map"))
         location = request.POST["searched"]
         tableFilter = RestroomFilter()
         k = search(api_key, '"restroom","food","public"', location, 20)
         data = []
+        loc = []
+        loc1 = []
         if not k.get("error"):
             data = k["businesses"]
             # Sort by distance
@@ -55,6 +60,9 @@ def search_restroom(request):
             restroom["distance"] = int(restroom["distance"])
             # print(restroom["distance"])
             r_id = restroom["id"]
+            r_coordinates_lat = restroom["coordinates"]["latitude"]
+            r_coordinates_long = restroom["coordinates"]["longitude"]
+            loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
             querySet = Restroom.objects.filter(yelp_id=r_id)
             if not querySet:
                 restroom["our_rating"] = "no rating"
@@ -66,18 +74,26 @@ def search_restroom(request):
             addr = str(restroom["location"]["display_address"])
             restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
         # context["form"] = form
+        url = str(
+            google_url(loc, loc1, width=800, height=740, center=location, key=map)
+        )
         context["location"] = location
         context["data"] = data
         context["tableFilter"] = tableFilter
+        context["map"] = url
+        request.session["search_location"] = location
         return render(request, "naturescall/search_restroom.html", context)
     else:
         dbRestroom = Restroom.objects.all()
         tableFilter = RestroomFilter(request.GET, queryset=dbRestroom)
         location = request.GET["filtered"]
+        map = str(os.getenv("map"))
         yelp_data = search(api_key, '"restroom","food","public"', location, 20)
         data = []
         data1 = []
         data2 = []
+        loc = []
+        loc1 = []
         if not yelp_data.get("error"):
             data1 = yelp_data["businesses"]
             data1.sort(key=getDistance)
@@ -101,13 +117,22 @@ def search_restroom(request):
             for restroom in data1:
                 if restroom["db_id"] == obj.id:
                     data.append(restroom)
-                    print(data)
+                    r_coordinates_lat = restroom["coordinates"]["latitude"]
+                    r_coordinates_long = restroom["coordinates"]["longitude"]
+                    loc1.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
                 else:
                     data2.append(restroom)
-                    print(data2)
+                    r_coordinates_lat = restroom["coordinates"]["latitude"]
+                    r_coordinates_long = restroom["coordinates"]["longitude"]
+                    loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
+        url = str(
+            google_url(loc, loc1, width=600, height=740, center=location, key=map)
+        )
         context["tableFilter"] = tableFilter
         context["data"] = data
         context["data1"] = data2
+        context["map"] = url
+        request.session["search_location"] = location
         return render(request, "naturescall/filtered_search.html", context)
 
 
@@ -116,10 +141,13 @@ def filter_restroom(request):
     dbRestroom = Restroom.objects.all()
     tableFilter = RestroomFilter(request.GET, queryset=dbRestroom)
     location = request.GET["filtered"]
+    map = str(os.getenv("map"))
     yelp_data = search(api_key, '"restroom","food","public"', location, 20)
     data = []
     data1 = []
     data2 = []
+    loc = []
+    loc1 = []
     if not yelp_data.get("error"):
         data1 = yelp_data["businesses"]
         data1.sort(key=getDistance)
@@ -144,13 +172,17 @@ def filter_restroom(request):
         for restroom in data1:
             if restroom["db_id"] == obj.id:
                 data.append(restroom)
-                print(data)
+                r_coordinates_lat = restroom["coordinates"]["latitude"]
+                r_coordinates_long = restroom["coordinates"]["longitude"]
+                loc1.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
             else:
                 data2.append(restroom)
-    context = {}
-    context["tableFilter"] = tableFilter
-    context["data"] = data
-    context["data1"] = data2
+                r_coordinates_lat = restroom["coordinates"]["latitude"]
+                r_coordinates_long = restroom["coordinates"]["longitude"]
+                loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
+    url = str(google_url(loc, loc1, width=600, height=740, center=location, key=map))
+    context = {"tableFilter": tableFilter, "data": data, "data1": data2, "map": url}
+    request.session["search_location"] = location
     return render(request, "naturescall/filtered_search.html", context)
 
 
@@ -170,7 +202,7 @@ def rate_restroom(request, r_id):
             messages.success(request, f"{msg}")
             return redirect("naturescall:restroom_detail", r_id=current_restroom.id)
     else:
-        # check for redundent rating
+        # check for redundant rating
         querySet = Rating.objects.filter(restroom_id=r_id, user_id=current_user)
         if querySet:
             msg = "Sorry, You have already rated this restroom!!"
@@ -178,7 +210,7 @@ def rate_restroom(request, r_id):
             return redirect("naturescall:restroom_detail", r_id=current_restroom.id)
 
     form = AddRating()
-    context = {"form": form}
+    context = {"form": form, "title": current_restroom.title}
     return render(request, "naturescall/rate_restroom.html", context)
 
 
@@ -195,9 +227,14 @@ def add_restroom(request, r_id):
             return render(request, "naturescall/add_restroom.html", {"form": f})
     else:
         k = get_business(api_key, r_id)
+        if k.get("error"):
+            raise Http404("Restroom does not exist")
         context = {}
         name = k["name"]
-        form = AddRestroom(initial={"yelp_id": r_id})
+        title = (
+            k["name"] + " " + k["location"]["address1"] + " " + k["location"]["city"]
+        )
+        form = AddRestroom(initial={"yelp_id": r_id, "title": title})
         context["form"] = form
         context["name"] = name
         return render(request, "naturescall/add_restroom.html", context)
@@ -205,7 +242,6 @@ def add_restroom(request, r_id):
 
 def calculate_rating(r_id):
     querySet = Rating.objects.filter(restroom_id=r_id)
-    print(querySet)
     if querySet:
         average_rating = 0
         for rating in querySet.values():
@@ -213,7 +249,7 @@ def calculate_rating(r_id):
         average_rating = average_rating / len(querySet)
         return round(average_rating, 1)
     else:
-        return "be to rated"
+        return "N/A"
 
 
 # The page for showing one restroom details
@@ -239,7 +275,8 @@ def restroom_detail(request, r_id):
     else:
         raise Http404("Restroom does not exist")
 
-    context = {"res": res}
+    ratings = Rating.objects.filter(restroom_id=r_id)
+    context = {"res": res, "ratings": ratings, "map_key": map_embedded_key}
     return render(request, "naturescall/restroom_detail.html", context)
 
 
@@ -256,6 +293,36 @@ def request(host, path, api_key, url_params=None):
 
 # Helper function: fetch searched data with given parameters - search keywords
 # as term, address as loaction, and number of data entries to fetch as num
+def style_marker(locat, style_options={}):
+    opts = ["%s:%s" % (k, v) for k, v in style_options.items()]
+    opts.append(locat)
+    return "|".join(opts)
+
+
+def google_url(loc, loc1, width, height, center, key, maptype="roadmap"):
+    gmap_url = "https://maps.googleapis.com/maps/api/staticmap"
+    size_str = str(width) + "x" + str(height)
+    markers_objects = []
+    obj = style_marker(center, style_options={"color": "red", "label": "S"})
+    markers_objects.append(obj)
+    for loc2 in loc:
+        obj = style_marker(loc2, style_options={"color": "green", "label": "R"})
+        markers_objects.append(obj)
+    if loc1:
+        for l1 in loc1:
+            obj = style_marker(l1, style_options={"color": "orange", "label": "F"})
+            markers_objects.append(obj)
+    mapopts = {
+        "center": center,
+        "size": size_str,
+        "markers": markers_objects,
+        "maptype": maptype,
+        "key": key,
+    }
+    query_str = urlencode(mapopts, doseq=True)
+    return gmap_url + "?" + query_str
+
+
 def search(api_key, term, location, num):
     url_params = {
         "term": term.replace(" ", "+"),
