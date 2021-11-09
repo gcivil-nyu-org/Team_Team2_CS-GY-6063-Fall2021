@@ -10,7 +10,7 @@ branches:
   - main
   - travis
 before_script:
-  - cd ./teamtwo
+#  - cd ./teamtwo
   - python manage.py makemigrations
   - python manage.py migrate
 script:
