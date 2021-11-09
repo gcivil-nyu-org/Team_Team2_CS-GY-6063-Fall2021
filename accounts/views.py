@@ -1,9 +1,9 @@
 from django.shortcuts import render
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, Http404
 from naturescall.models import Rating
 
 # from django.contrib.auth import login, authenticate
-from .forms import SignupForm
+from .forms import SignupForm, EditRating
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.contrib import messages
@@ -93,3 +93,44 @@ def view_profile(request):
     query_set = Rating.objects.filter(user_id=current_user)
     context = {"u_form": u_form, "p_form": p_form, "ratings": query_set}
     return render(request, "accounts/profile.html", context)
+
+
+@login_required
+def edit_rating(request, r_id):
+    # security check
+    querySet = Rating.objects.filter(id=r_id)
+    if not querySet:
+        raise Http404("Sorry, the rating does not exist")
+    rating_entry = querySet[0]
+    if rating_entry.user_id != request.user:
+        raise Http404("Sorry, you do not have the right to edit this rating")
+    if request.method == "POST":
+        form = EditRating(data=request.POST)
+        if form.is_valid():
+            rating_entry = Rating.objects.get(id=r_id)
+            rating_entry.rating = form.instance.rating
+            rating_entry.headline = form.instance.headline
+            rating_entry.comment = form.instance.comment
+            rating_entry.save()
+            msg = "Your rating has been updated!"
+            messages.success(request, f"{msg}")
+            return HttpResponseRedirect(reverse("naturescall:index"))
+    else:
+        form = EditRating()
+        context = {"ratingID": r_id, "form": form, "title": rating_entry.restroom_id}
+        return render(request, "accounts/edit_rating.html", context)
+
+
+@login_required
+def delete_rating(request, r_id):
+    # security check
+    querySet = Rating.objects.filter(id=r_id)
+    if not querySet:
+        raise Http404("Sorry, the rating does not exist")
+    rating_entry = querySet[0]
+    if rating_entry.user_id != request.user:
+        raise Http404("Sorry, you do not have the right to delete this rating")
+    rating_entry.delete()
+    msg = "Your rating has been deleted!"
+    messages.success(request, f"{msg}")
+    return HttpResponseRedirect(reverse("naturescall:index"))

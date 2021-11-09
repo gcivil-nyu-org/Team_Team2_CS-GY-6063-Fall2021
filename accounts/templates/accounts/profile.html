@@ -39,12 +39,14 @@
 								</button>
 							</h2>
 						</div>
-	
+
 						<div id="collapse-{{rating.pk}}" class="collapse" aria-labelledby="heading-{{rating.pk}}" data-parent="#accordionExample">
 							<div class="card-body">
 								<li>Rating: {{rating.rating}}</li>
 								<li>Headline: {{rating.headline}}</li>
-								<li>Comment: {{rating.comment}}</li>						
+								<li>Comment: {{rating.comment}}</li>
+								<li><a href="{% url 'accounts:edit_rating' rating.id %}" >Edit Rating</a></li>
+								<li><a href="{% url 'accounts:delete_rating' rating.id %}" >delete Rating</a></li>			
 							</div>
 						</div>
 					</div>
