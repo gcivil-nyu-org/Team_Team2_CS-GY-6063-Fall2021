@@ -113,18 +113,6 @@ def search_restroom(request):
                 ]
             addr = str(restroom["location"]["display_address"])
             restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
-        # for restroom in data1:
-        #     for obj in tableFilter.qs:
-        #         if restroom["db_id"] == obj.id:
-        #             data.append(restroom)
-        #             r_coordinates_lat = restroom["coordinates"]["latitude"]
-        #             r_coordinates_long = restroom["coordinates"]["longitude"]
-        #             loc1.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
-        #         else:
-        #             data2.append(restroom)
-        #             r_coordinates_lat = restroom["coordinates"]["latitude"]
-        #             r_coordinates_long = restroom["coordinates"]["longitude"]
-        #             loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
         id_obj_pairs = {}
         for obj in tableFilter.qs:
             id = obj.id
@@ -184,7 +172,6 @@ def filter_restroom(request):
         addr = str(restroom["location"]["display_address"])
         restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
 
-    # for obj in tableFilter.qs:
     for restroom in data1:
         filtered_db_restroom = tableFilter.qs.get(id=restroom["db_id"])
         if filtered_db_restroom:
@@ -197,17 +184,6 @@ def filter_restroom(request):
             r_coordinates_lat = restroom["coordinates"]["latitude"]
             r_coordinates_long = restroom["coordinates"]["longitude"]
             loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
-            # if restroom["db_id"] == obj.id:
-            #     data.append(restroom)
-            #     r_coordinates_lat = restroom["coordinates"]["latitude"]
-            #     r_coordinates_long = restroom["coordinates"]["longitude"]
-            #     loc1.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
-            # else:
-            #     data2.append(restroom)
-            #     r_coordinates_lat = restroom["coordinates"]["latitude"]
-            #     r_coordinates_long = restroom["coordinates"]["longitude"]
-            #     loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
-    # tableFilter.qs.filter(id=)
     url = str(google_url(loc, loc1, width=600, height=740, center=location, key=map))
     context = {"tableFilter": tableFilter, "data": data, "data1": data2, "map": url}
     request.session["search_location"] = location
