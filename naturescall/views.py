@@ -172,6 +172,11 @@ def filter_restroom(request):
         addr = str(restroom["location"]["display_address"])
         restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
 
+    id_obj_pairs = {}
+    for obj in tableFilter.qs:
+        id = obj.id
+        id_obj_pairs[id] = obj
+        
     for restroom in data1:
         filtered_db_restroom = tableFilter.qs.get(id=restroom["db_id"])
         if filtered_db_restroom:
