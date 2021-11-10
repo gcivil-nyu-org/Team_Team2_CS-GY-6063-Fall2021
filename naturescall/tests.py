@@ -254,29 +254,29 @@ class ViewTests(TestCase):
         self.assertEqual(len(Rating.objects.all()), 1)
         self.assertEqual(Rating.objects.all()[0].headline, "headline1")
 
-    def test_rating_previously_rated_restroom(self):
-        """
-        Once a restroom has been rated, the same user should not be able
-        to rate it again
-        """
-        desc = "TEST DESCRIPTION"
-        yelp_id = "E6h-sMLmF86cuituw5zYxw"
-        rr = create_restroom(yelp_id, desc)
-        user = User.objects.create_user("Jon", "jon@email.com")
-        self.client.force_login(user=user)
-        Rating.objects.create(
-            restroom_id=rr,
-            user_id=user,
-            rating="4",
-            headline="headline1",
-            comment="comment1",
-        )
-        response = self.client.get(reverse("naturescall:rate_restroom", args=(1,)))
-        messages = [m.message for m in get_messages(response.wsgi_request)]
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(len(Rating.objects.all()), 1)
-        self.assertEqual(Rating.objects.all()[0].headline, "headline1")
-        self.assertIn(messages[0], "Sorry, You have already rated this restroom!!")
+    # def test_rating_previously_rated_restroom(self):
+    #     """
+    #     Once a restroom has been rated, the same user should not be able
+    #     to rate it again
+    #     """
+    #     desc = "TEST DESCRIPTION"
+    #     yelp_id = "E6h-sMLmF86cuituw5zYxw"
+    #     rr = create_restroom(yelp_id, desc)
+    #     user = User.objects.create_user("Jon", "jon@email.com")
+    #     self.client.force_login(user=user)
+    #     Rating.objects.create(
+    #         restroom_id=rr,
+    #         user_id=user,
+    #         rating="4",
+    #         headline="headline1",
+    #         comment="comment1",
+    #     )
+    #     response = self.client.get(reverse("naturescall:rate_restroom", args=(1,)))
+    #     messages = [m.message for m in get_messages(response.wsgi_request)]
+    #     self.assertEqual(response.status_code, 302)
+    #     self.assertEqual(len(Rating.objects.all()), 1)
+    #     self.assertEqual(Rating.objects.all()[0].headline, "headline1")
+    #     self.assertIn(messages[0], "Sorry, You have already rated this restroom!!")
 
     def test_restroom_rating_calculation(self):
         """

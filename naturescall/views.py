@@ -191,25 +191,24 @@ def rate_restroom(request, r_id):
     """Rate a restroom"""
     current_restroom = get_object_or_404(Restroom, id=r_id)
     current_user = request.user
+    rating_set = Rating.objects.filter(restroom_id=r_id, user_id=current_user)
     if request.method == "POST":
         form = AddRating(data=request.POST)
         if form.is_valid():
-            new_entry = form.save(commit=False)
-            new_entry.user_id = current_user
-            new_entry.restroom_id = current_restroom
-            new_entry.save()
+            entry = form.save(commit=False)
+            entry.user_id = current_user
+            entry.restroom_id = current_restroom
+            if rating_set:
+                entry.id = rating_set[0].id
+            entry.save()
             msg = "Congratulations, Your rating has been saved!"
             messages.success(request, f"{msg}")
             return redirect("naturescall:restroom_detail", r_id=current_restroom.id)
     else:
-        # check for redundant rating
-        querySet = Rating.objects.filter(restroom_id=r_id, user_id=current_user)
-        if querySet:
-            msg = "Sorry, You have already rated this restroom!!"
-            messages.success(request, f"{msg}")
-            return redirect("naturescall:restroom_detail", r_id=current_restroom.id)
-
-    form = AddRating()
+        if rating_set:
+            form = AddRating(instance=rating_set[0])
+        else:
+            form = AddRating()
     context = {"form": form, "title": current_restroom.title}
     return render(request, "naturescall/rate_restroom.html", context)
 
