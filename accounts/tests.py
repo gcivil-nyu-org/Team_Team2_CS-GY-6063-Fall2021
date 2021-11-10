@@ -118,7 +118,7 @@ class ProfileTests(TestCase):
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertIn(messages[0], "Your rating has been updated!")
 
-    def edit_non_existant_rating(self):
+    def test_edit_non_existant_rating(self):
         """
         user A will receive 404 message when trying to edit rating does not exist
         """
@@ -136,10 +136,8 @@ class ProfileTests(TestCase):
         )
         response = self.client.get(reverse("accounts:edit_rating", args=(10,)))
         self.assertEqual(response.status_code, 404)
-        messages = [m.message for m in get_messages(response.wsgi_request)]
-        self.assertIn(messages[0], "Sorry, the rating does not exist")
 
-    def delete_non_existant_rating(self):
+    def test_delete_non_existant_rating(self):
         """
         user A will receive 404 message when trying to delete rating does not exist
         """
@@ -157,10 +155,8 @@ class ProfileTests(TestCase):
         )
         response = self.client.get(reverse("accounts:delete_rating", args=(10,)))
         self.assertEqual(response.status_code, 404)
-        messages = [m.message for m in get_messages(response.wsgi_request)]
-        self.assertIn(messages[0], "Sorry, the rating does not exist")
 
-    def edit_rating_wrong_user(self):
+    def test_edit_rating_wrong_user(self):
         """
         user A will receive 404 message when trying to edit rating from user B
         """
@@ -179,12 +175,8 @@ class ProfileTests(TestCase):
         )
         response = self.client.get(reverse("accounts:edit_rating", args=(1,)))
         self.assertEqual(response.status_code, 404)
-        messages = [m.message for m in get_messages(response.wsgi_request)]
-        self.assertIn(
-            messages[0], "Sorry, you do not have the right to edit this rating"
-        )
 
-    def delete_rating_wrong_user(self):
+    def test_delete_rating_wrong_user(self):
         """
         user A will receive 404 message when trying to delete rating from user B
         """
@@ -203,7 +195,3 @@ class ProfileTests(TestCase):
         )
         response = self.client.get(reverse("accounts:delete_rating", args=(1,)))
         self.assertEqual(response.status_code, 404)
-        messages = [m.message for m in get_messages(response.wsgi_request)]
-        self.assertIn(
-            messages[0], "Sorry, you do not have the right to delete this rating"
-        )
