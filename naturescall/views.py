@@ -213,6 +213,20 @@ def rate_restroom(request, r_id):
     return render(request, "naturescall/rate_restroom.html", context)
 
 
+@login_required
+def delete_rating(request, r_id):
+    """delete a restroom rating"""
+    current_user = request.user
+    rating_set = Rating.objects.filter(restroom_id=r_id, user_id=current_user)
+    if not rating_set:
+        raise Http404("Sorry, no rating exists")
+    rating_entry = rating_set[0]
+    rating_entry.delete()
+    msg = "Your rating has been deleted!"
+    messages.success(request, f"{msg}")
+    return HttpResponseRedirect(reverse("naturescall:index"))
+
+
 # The page for adding new restroom to our database
 @login_required(login_url="login")
 def add_restroom(request, r_id):
