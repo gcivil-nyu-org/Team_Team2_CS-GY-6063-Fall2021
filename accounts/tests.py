@@ -17,6 +17,57 @@ def create_restroom(yelp_id, desc):
 
 
 class ProfileTests(TestCase):
+    def test_access_signup(self):
+        """
+        A get request to the signup page should yield a valid response
+        """
+        response = self.client.get(reverse("accounts:signup"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_account_creation_valid_form(self):
+        """
+        A valid form should yield a redirect upon submission and
+        add a user to the database
+        """
+        response = self.client.post(
+            reverse("accounts:signup"),
+            data={
+                "username": "test_user",
+                "email": "test_user@email.com",
+                "first_name": "test",
+                "last_name": "user",
+                "password1": "BDbdKDwpSt",
+                "password2": "BDbdKDwpSt",
+            },
+        )
+        all_users = User.objects.filter(id=1)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(len(all_users), 1)
+
+    def test_account_creation_invalid_form(self):
+        """
+        An invalid form should yield an error upon submission
+        """
+        response = self.client.post(
+            reverse("accounts:signup"),
+            data={
+                "username": "test_user",
+                "email": "test_user@email.com",
+                "first_name": "test",
+                "last_name": "user",
+                "password1": "BDbdKDwpSt",
+                "password2": "BDbdKDwpStX",
+            },
+        )
+        self.assertContains(response, "Unsuccessful registration. Invalid information.")
+
+    def test_invalid_verification_link(self):
+        """
+        An invalid verification request should yield a redirect
+        """
+        response = self.client.get(reverse("accounts:activate", args=(1, 1)))
+        self.assertEqual(response.status_code, 302)
+
     def test_profile_normal_access(self):
         """
         Once a user is logged in, the profile page should be accessible
@@ -51,13 +102,15 @@ class ProfileTests(TestCase):
         messages = [m.message for m in get_messages(response.wsgi_request)]
         self.assertIn(messages[0], "Your account has been updated!")
 
-    def test_delete_rating(self):
+    def test_get_profile(self):
         """
-        A user can delete rating
+        A user goes to the profile page and is able to see profile
+        and rating information, including the rating title
         """
         desc = "TEST DESCRIPTION"
         yelp_id = "E6h-sMLmF86cuituw5zYxw"
         rr = create_restroom(yelp_id, desc)
+        title = rr.title
         user = User.objects.create_user("Jon", "jon@email.com")
         self.client.force_login(user=user)
         Rating.objects.create(
@@ -67,131 +120,111 @@ class ProfileTests(TestCase):
             headline="headline1",
             comment="comment1",
         )
-        response = self.client.get(reverse("accounts:delete_rating", args=(1,)))
-        self.assertEqual(response.status_code, 302)
-        messages = [m.message for m in get_messages(response.wsgi_request)]
-        self.assertIn(messages[0], "Your rating has been deleted!")
-
-    def test_edit_rating_form(self):
-        """
-        A user can edit rating
-        """
-        desc = "TEST DESCRIPTION"
-        yelp_id = "E6h-sMLmF86cuituw5zYxw"
-        rr = create_restroom(yelp_id, desc)
-        user = User.objects.create_user("Jon", "jon@email.com")
-        self.client.force_login(user=user)
-        Rating.objects.create(
-            restroom_id=rr,
-            user_id=user,
-            rating="4",
-            headline="headline1",
-            comment="comment1",
-        )
-        response = self.client.get(reverse("accounts:edit_rating", args=(1,)))
+        response = self.client.get(reverse("accounts:profile"))
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, title)
 
-    def test_edit_rating_edit(self):
-        """
-        A user can edit rating
-        """
-        desc = "TEST DESCRIPTION"
-        yelp_id = "E6h-sMLmF86cuituw5zYxw"
-        rr = create_restroom(yelp_id, desc)
-        user = User.objects.create_user("Jon", "jon@email.com")
-        self.client.force_login(user=user)
-        Rating.objects.create(
-            restroom_id=rr,
-            user_id=user,
-            rating="4",
-            headline="headline1",
-            comment="comment1",
-        )
-        response = self.client.post(
-            reverse("accounts:edit_rating", args=(1,)),
-            data={"rating": 5, "headline": "123", "comment": "456", },
-        )
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(Rating.objects.all()[0].rating, 5)
-        self.assertEqual(Rating.objects.all()[0].headline, "123")
-        self.assertEqual(Rating.objects.all()[0].comment, "456")
-        messages = [m.message for m in get_messages(response.wsgi_request)]
-        self.assertIn(messages[0], "Your rating has been updated!")
+    # def test_edit_rating_form(self):
+    #     """
+    #     A user can edit rating
+    #     """
+    #     desc = "TEST DESCRIPTION"
+    #     yelp_id = "E6h-sMLmF86cuituw5zYxw"
+    #     rr = create_restroom(yelp_id, desc)
+    #     user = User.objects.create_user("Jon", "jon@email.com")
+    #     self.client.force_login(user=user)
+    #     Rating.objects.create(
+    #         restroom_id=rr,
+    #         user_id=user,
+    #         rating="4",
+    #         headline="headline1",
+    #         comment="comment1",
+    #     )
+    #     response = self.client.get(reverse("accounts:edit_rating", args=(1,)))
+    #     self.assertEqual(response.status_code, 200)
 
-    def test_edit_non_existant_rating(self):
-        """
-        user A will receive 404 message when trying to edit rating does not exist
-        """
-        yelp_id = "E6h-sMLmF86cuituw5zYxw"
-        desc = "Testing newly created restroom"
-        new_restroom = create_restroom(yelp_id, desc)
-        user1 = User.objects.create_user("Simon1", "simon1@email.com")
-        self.client.force_login(user=user1)
-        Rating.objects.create(
-            restroom_id=new_restroom,
-            user_id=user1,
-            rating="1",
-            headline="headline1",
-            comment="comment1",
-        )
-        response = self.client.get(reverse("accounts:edit_rating", args=(10,)))
-        self.assertEqual(response.status_code, 404)
+    # def test_edit_rating_edit(self):
+    #     """
+    #     A user can edit rating
+    #     """
+    #     desc = "TEST DESCRIPTION"
+    #     yelp_id = "E6h-sMLmF86cuituw5zYxw"
+    #     rr = create_restroom(yelp_id, desc)
+    #     user = User.objects.create_user("Jon", "jon@email.com")
+    #     self.client.force_login(user=user)
+    #     Rating.objects.create(
+    #         restroom_id=rr,
+    #         user_id=user,
+    #         rating="4",
+    #         headline="headline1",
+    #         comment="comment1",
+    #     )
+    #     response = self.client.post(
+    #         reverse("accounts:edit_rating", args=(1,)),
+    #         data={"rating": 5, "headline": "123", "comment": "456", },
+    #     )
+    #     self.assertEqual(response.status_code, 302)
+    #     self.assertEqual(Rating.objects.all()[0].rating, 5)
+    #     self.assertEqual(Rating.objects.all()[0].headline, "123")
+    #     self.assertEqual(Rating.objects.all()[0].comment, "456")
+    #     messages = [m.message for m in get_messages(response.wsgi_request)]
+    #     self.assertIn(messages[0], "Your rating has been updated!")
 
-    def test_delete_non_existant_rating(self):
-        """
-        user A will receive 404 message when trying to delete rating does not exist
-        """
-        yelp_id = "E6h-sMLmF86cuituw5zYxw"
-        desc = "Testing newly created restroom"
-        new_restroom = create_restroom(yelp_id, desc)
-        user1 = User.objects.create_user("Simon1", "simon1@email.com")
-        self.client.force_login(user=user1)
-        Rating.objects.create(
-            restroom_id=new_restroom,
-            user_id=user1,
-            rating="1",
-            headline="headline1",
-            comment="comment1",
-        )
-        response = self.client.get(reverse("accounts:delete_rating", args=(10,)))
-        self.assertEqual(response.status_code, 404)
+    # def test_edit_non_existant_rating(self):
+    #     """
+    #     user A will receive 404 message when trying to edit rating does not exist
+    #     """
+    #     yelp_id = "E6h-sMLmF86cuituw5zYxw"
+    #     desc = "Testing newly created restroom"
+    #     new_restroom = create_restroom(yelp_id, desc)
+    #     user1 = User.objects.create_user("Simon1", "simon1@email.com")
+    #     self.client.force_login(user=user1)
+    #     Rating.objects.create(
+    #         restroom_id=new_restroom,
+    #         user_id=user1,
+    #         rating="1",
+    #         headline="headline1",
+    #         comment="comment1",
+    #     )
+    #     response = self.client.get(reverse("accounts:edit_rating", args=(10,)))
+    #     self.assertEqual(response.status_code, 404)
 
-    def test_edit_rating_wrong_user(self):
-        """
-        user A will receive 404 message when trying to edit rating from user B
-        """
-        yelp_id = "E6h-sMLmF86cuituw5zYxw"
-        desc = "Testing newly created restroom"
-        new_restroom = create_restroom(yelp_id, desc)
-        user1 = User.objects.create_user("Simon1", "simon1@email.com")
-        user2 = User.objects.create_user("Simon2", "simon2@email.com")
-        self.client.force_login(user=user2)
-        Rating.objects.create(
-            restroom_id=new_restroom,
-            user_id=user1,
-            rating="1",
-            headline="headline1",
-            comment="comment1",
-        )
-        response = self.client.get(reverse("accounts:edit_rating", args=(1,)))
-        self.assertEqual(response.status_code, 404)
+    # def test_edit_rating_wrong_user(self):
+    #     """
+    #     user A will receive 404 message when trying to edit rating from user B
+    #     """
+    #     yelp_id = "E6h-sMLmF86cuituw5zYxw"
+    #     desc = "Testing newly created restroom"
+    #     new_restroom = create_restroom(yelp_id, desc)
+    #     user1 = User.objects.create_user("Simon1", "simon1@email.com")
+    #     user2 = User.objects.create_user("Simon2", "simon2@email.com")
+    #     self.client.force_login(user=user2)
+    #     Rating.objects.create(
+    #         restroom_id=new_restroom,
+    #         user_id=user1,
+    #         rating="1",
+    #         headline="headline1",
+    #         comment="comment1",
+    #     )
+    #     response = self.client.get(reverse("accounts:edit_rating", args=(1,)))
+    #     self.assertEqual(response.status_code, 404)
 
-    def test_delete_rating_wrong_user(self):
-        """
-        user A will receive 404 message when trying to delete rating from user B
-        """
-        yelp_id = "E6h-sMLmF86cuituw5zYxw"
-        desc = "Testing newly created restroom"
-        new_restroom = create_restroom(yelp_id, desc)
-        user1 = User.objects.create_user("Simon1", "simon1@email.com")
-        user2 = User.objects.create_user("Simon2", "simon2@email.com")
-        self.client.force_login(user=user2)
-        Rating.objects.create(
-            restroom_id=new_restroom,
-            user_id=user1,
-            rating="1",
-            headline="headline1",
-            comment="comment1",
-        )
-        response = self.client.get(reverse("accounts:delete_rating", args=(1,)))
-        self.assertEqual(response.status_code, 404)
+    # def test_delete_rating_wrong_user(self):
+    #     """
+    #     user A will receive 404 message when trying to delete rating from user B
+    #     """
+    #     yelp_id = "E6h-sMLmF86cuituw5zYxw"
+    #     desc = "Testing newly created restroom"
+    #     new_restroom = create_restroom(yelp_id, desc)
+    #     user1 = User.objects.create_user("Simon1", "simon1@email.com")
+    #     user2 = User.objects.create_user("Simon2", "simon2@email.com")
+    #     self.client.force_login(user=user2)
+    #     Rating.objects.create(
+    #         restroom_id=new_restroom,
+    #         user_id=user1,
+    #         rating="1",
+    #         headline="headline1",
+    #         comment="comment1",
+    #     )
+    #     response = self.client.get(reverse("accounts:delete_rating", args=(1,)))
+    #     self.assertEqual(response.status_code, 404)

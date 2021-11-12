@@ -11,6 +11,7 @@ urlpatterns = [
     path("add_restroom/<slug:r_id>", views.add_restroom, name="add_restroom"),
     path("filter_restroom/", views.filter_restroom, name="filter_restroom"),
     path("rate_restroom/<int:r_id>", views.rate_restroom, name="rate_restroom"),
+    path("delete_rating/<int:r_id>", views.delete_rating, name="delete_rating"),
 ]
 urlpatterns += [
     path("accounts/", include("accounts.urls", namespace="accounts")),
