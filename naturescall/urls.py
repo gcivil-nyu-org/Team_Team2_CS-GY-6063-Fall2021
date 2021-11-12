@@ -1,4 +1,4 @@
-from django.urls import path, include
+from django.urls import path
 
 # from django.contrib.auth import views as auth_views
 from . import views
@@ -13,7 +13,7 @@ urlpatterns = [
     path("rate_restroom/<int:r_id>", views.rate_restroom, name="rate_restroom"),
     path("delete_rating/<int:r_id>", views.delete_rating, name="delete_rating"),
 ]
-urlpatterns += [
-    path("accounts/", include("accounts.urls", namespace="accounts")),
-    path("accounts/", include("django.contrib.auth.urls")),
-]
+# urlpatterns += [
+#     path("accounts/", include("accounts.urls", namespace="accounts")),
+#     path("accounts/", include("django.contrib.auth.urls")),
+# ]
