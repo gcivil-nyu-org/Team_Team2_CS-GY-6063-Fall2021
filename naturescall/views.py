@@ -113,25 +113,24 @@ def search_restroom(request):
                 ]
             addr = str(restroom["location"]["display_address"])
             restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
+        id_obj_pairs = {}
         for obj in tableFilter.qs:
-            print(obj.id)
+            id = obj.id
+            id_obj_pairs[id] = obj
         for restroom in data1:
-            for obj in tableFilter.qs:
-                if restroom["db_id"] == obj.id:
-                    data.append(restroom)
-                    r_coordinates_lat = restroom["coordinates"]["latitude"]
-                    r_coordinates_long = restroom["coordinates"]["longitude"]
-                    loc1.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
-                    print("loc1")
-                    print(loc1)
-                else:
-                    data2.append(restroom)
-                    r_coordinates_lat = restroom["coordinates"]["latitude"]
-                    r_coordinates_long = restroom["coordinates"]["longitude"]
-                    loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
-                    print("loc")
-                    print(loc)
-        url = str(google_url(loc, loc1, width=600, height=740, center=location, key=map))
+            if restroom["db_id"] in id_obj_pairs:
+                data.append(restroom)
+                r_coordinates_lat = restroom["coordinates"]["latitude"]
+                r_coordinates_long = restroom["coordinates"]["longitude"]
+                loc1.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
+            else:
+                data2.append(restroom)
+                r_coordinates_lat = restroom["coordinates"]["latitude"]
+                r_coordinates_long = restroom["coordinates"]["longitude"]
+                loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
+        url = str(
+            google_url(loc, loc1, width=600, height=740, center=location, key=map)
+        )
         context["tableFilter"] = tableFilter
         context["data"] = data
         context["data1"] = data2
@@ -171,18 +170,21 @@ def filter_restroom(request):
             ]
         addr = str(restroom["location"]["display_address"])
         restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
+    id_obj_pairs = {}
+    for obj in tableFilter.qs:
+        id = obj.id
+        id_obj_pairs[id] = obj
     for restroom in data1:
-        for obj in tableFilter.qs:
-            if restroom["db_id"] == obj.id:
-                data.append(restroom)
-                r_coordinates_lat = restroom["coordinates"]["latitude"]
-                r_coordinates_long = restroom["coordinates"]["longitude"]
-                loc1.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
-            else:
-                data2.append(restroom)
-                r_coordinates_lat = restroom["coordinates"]["latitude"]
-                r_coordinates_long = restroom["coordinates"]["longitude"]
-                loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
+        if restroom["db_id"] in id_obj_pairs:
+            data.append(restroom)
+            r_coordinates_lat = restroom["coordinates"]["latitude"]
+            r_coordinates_long = restroom["coordinates"]["longitude"]
+            loc1.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
+        else:
+            data2.append(restroom)
+            r_coordinates_lat = restroom["coordinates"]["latitude"]
+            r_coordinates_long = restroom["coordinates"]["longitude"]
+            loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
     url = str(google_url(loc, loc1, width=600, height=740, center=location, key=map))
     context = {"tableFilter": tableFilter, "data": data, "data1": data2, "map": url}
     request.session["search_location"] = location
@@ -194,27 +196,40 @@ def rate_restroom(request, r_id):
     """Rate a restroom"""
     current_restroom = get_object_or_404(Restroom, id=r_id)
     current_user = request.user
+    rating_set = Rating.objects.filter(restroom_id=r_id, user_id=current_user)
     if request.method == "POST":
         form = AddRating(data=request.POST)
         if form.is_valid():
-            new_entry = form.save(commit=False)
-            new_entry.user_id = current_user
-            new_entry.restroom_id = current_restroom
-            new_entry.save()
+            entry = form.save(commit=False)
+            entry.user_id = current_user
+            entry.restroom_id = current_restroom
+            if rating_set:
+                entry.id = rating_set[0].id
+            entry.save()
             msg = "Congratulations, Your rating has been saved!"
             messages.success(request, f"{msg}")
             return redirect("naturescall:restroom_detail", r_id=current_restroom.id)
     else:
-        # check for redundant rating
-        querySet = Rating.objects.filter(restroom_id=r_id, user_id=current_user)
-        if querySet:
-            msg = "Sorry, You have already rated this restroom!!"
-            messages.success(request, f"{msg}")
-            return redirect("naturescall:restroom_detail", r_id=current_restroom.id)
-
-    form = AddRating()
+        if rating_set:
+            form = AddRating(instance=rating_set[0])
+        else:
+            form = AddRating()
     context = {"form": form, "title": current_restroom.title}
     return render(request, "naturescall/rate_restroom.html", context)
+
+
+@login_required
+def delete_rating(request, r_id):
+    """delete a restroom rating"""
+    current_user = request.user
+    rating_set = Rating.objects.filter(restroom_id=r_id, user_id=current_user)
+    if not rating_set:
+        raise Http404("Sorry, no rating exists")
+    rating_entry = rating_set[0]
+    rating_entry.delete()
+    msg = "Your rating has been deleted!"
+    messages.success(request, f"{msg}")
+    return HttpResponseRedirect(reverse("naturescall:index"))
 
 
 # The page for adding new restroom to our database
