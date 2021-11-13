@@ -32,3 +32,12 @@ class Rating(models.Model):
     )
     headline = models.TextField(max_length=65)
     comment = models.TextField(max_length=500)
+
+
+class ClaimedRestroom(models.Model):
+    """Class to hold claimed restrooms and associated
+    information"""
+
+    restroom_id = models.ForeignKey(Restroom, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    verified = models.BooleanField(default=False)

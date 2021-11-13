@@ -1,9 +1,9 @@
-from naturescall.models import Restroom, Rating
+from naturescall.models import Restroom, Rating, ClaimedRestroom
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponseRedirect, Http404
 
 # from .forms import LocationForm
-from .forms import AddRestroom, AddRating
+from .forms import AddRestroom, AddRating, ClaimRestroom
 import requests
 from django.contrib.auth.decorators import login_required
 from .filters import RestroomFilter
@@ -296,6 +296,24 @@ def restroom_detail(request, r_id):
     ratings = Rating.objects.filter(restroom_id=r_id)
     context = {"res": res, "ratings": ratings, "map_key": map_embedded_key}
     return render(request, "naturescall/restroom_detail.html", context)
+
+
+def claim_restroom(request, r_id):
+    """claim a restroom"""
+    current_restroom = get_object_or_404(Restroom, id=r_id)
+    current_user = request.user
+    if request.method == "POST":
+        form = ClaimRestroom(request.POST)
+        if form.is_valid():
+            claim = ClaimedRestroom()
+            claim.restroom_id = current_restroom
+            claim.user_id = current_user
+            claim.save()
+            return redirect("naturescall:restroom_detail", r_id=r_id)
+    else:
+        form = ClaimRestroom()
+    context = {"form": form, "title": current_restroom.title}
+    return render(request, "naturescall/claim_restroom.html", context)
 
 
 # Helper function: make an API request

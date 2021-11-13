@@ -50,6 +50,7 @@
         <h4 class="card-text">Rating: {{res.yelp_data.rating}} </h4>
         <h4 class="card-text">Description: {{res.desc}} </h4>
         <a href="{% url 'naturescall:rate_restroom' res.yelp_data.db_id %}" class="btn btn-primary">Rate Now!</a>
+        <a href="{% url 'naturescall:claim_restroom' res.yelp_data.db_id %}" class="btn btn-primary">Claim This Restroom!</a>
       </div>
     </div>
   </div>
