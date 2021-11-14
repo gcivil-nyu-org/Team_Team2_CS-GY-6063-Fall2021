@@ -106,7 +106,7 @@ class ViewTests(TestCase):
         A search with an invalid search string should yield no results
         but should return a valid webpage
         """
-        response = self.client.post(
+        response = self.client.get(
             reverse("naturescall:search_restroom"), data={"searched": "szzzzz"}
         )
         self.assertEqual(response.status_code, 200)
@@ -117,7 +117,7 @@ class ViewTests(TestCase):
         A search with a valid search string with an empty database
         should return a valid webpage with 20 "Add Restroom" results
         """
-        response = self.client.post(
+        response = self.client.get(
             reverse("naturescall:search_restroom"), data={"searched": "nyu tandon"}
         )
         self.assertEqual(response.status_code, 200)
@@ -131,7 +131,7 @@ class ViewTests(TestCase):
         desc = "TEST DESCRIPTION"
         yelp_id = "E6h-sMLmF86cuituw5zYxw"
         create_restroom(yelp_id, desc)
-        response = self.client.post(
+        response = self.client.get(
             reverse("naturescall:search_restroom"), data={"searched": "nyu tandon"}
         )
         self.assertEqual(response.status_code, 200)
