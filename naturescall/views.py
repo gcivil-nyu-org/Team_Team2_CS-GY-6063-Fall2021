@@ -309,7 +309,11 @@ def restroom_detail(request, r_id):
 def claim_restroom(request, r_id):
     """claim a restroom"""
     current_restroom = get_object_or_404(Restroom, id=r_id)
-    current_user = request.user
+    current_claims = ClaimedRestroom.objects.filter(
+        restroom_id=current_restroom, verified=True
+    )
+    if current_claims:
+        raise Http404("Restroom has already been claimed")
     if request.method == "POST":
         form = ClaimRestroom(request.POST)
         if form.is_valid():
