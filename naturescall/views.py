@@ -273,28 +273,36 @@ def calculate_rating(r_id):
 # The page for showing one restroom details
 def restroom_detail(request, r_id):
     """Show a single restroom"""
-    querySet = Restroom.objects.filter(id=r_id)
+    current_restroom = get_object_or_404(Restroom, id=r_id)
+    current_user = request.user
     res = {}
-    if querySet:
-        yelp_id = querySet.values()[0]["yelp_id"]
-        yelp_data = get_business(api_key, yelp_id)
-        yelp_data["db_id"] = r_id
-        yelp_data["rating"] = calculate_rating(r_id)
-        yelp_data["accessible"] = querySet.values()[0]["accessible"]
-        yelp_data["family_friendly"] = querySet.values()[0]["family_friendly"]
-        yelp_data["transaction_not_required"] = querySet.values()[0][
-            "transaction_not_required"
-        ]
+    yelp_id = current_restroom.yelp_id
+    yelp_data = get_business(api_key, yelp_id)
+    yelp_data["db_id"] = r_id
+    yelp_data["rating"] = calculate_rating(r_id)
+    yelp_data["accessible"] = current_restroom.accessible
+    yelp_data["family_friendly"] = current_restroom.family_friendly
+    yelp_data["transaction_not_required"] = current_restroom.transaction_not_required
 
-        res["yelp_data"] = yelp_data
-        addr = str(yelp_data["location"]["display_address"])
-        res["addr"] = addr.translate(str.maketrans("", "", "[]'"))
-        res["desc"] = querySet.values()[0]["description"]
-    else:
-        raise Http404("Restroom does not exist")
+    res["yelp_data"] = yelp_data
+    addr = str(yelp_data["location"]["display_address"])
+    res["addr"] = addr.translate(str.maketrans("", "", "[]'"))
+    res["desc"] = current_restroom.description
+
+    # determine if claim button should be shown
+    show_claim = True
+    all_claims = ClaimedRestroom.objects.filter(restroom_id=current_restroom)
+    for claim in all_claims:
+        if claim.verified or claim.user_id == current_user:
+            show_claim = False
 
     ratings = Rating.objects.filter(restroom_id=r_id)
-    context = {"res": res, "ratings": ratings, "map_key": map_embedded_key}
+    context = {
+        "res": res,
+        "ratings": ratings,
+        "map_key": map_embedded_key,
+        "show_claim": show_claim,
+    }
     return render(request, "naturescall/restroom_detail.html", context)
 
 

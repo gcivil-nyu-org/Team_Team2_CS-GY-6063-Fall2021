@@ -54,5 +54,4 @@ class AddRating(forms.ModelForm):
 
 
 class ClaimRestroom(forms.Form):
-    # claim = forms.CheckboxInput()
     claim = forms.CheckboxInput()
