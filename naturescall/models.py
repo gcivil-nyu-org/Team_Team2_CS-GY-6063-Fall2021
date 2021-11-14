@@ -41,3 +41,6 @@ class ClaimedRestroom(models.Model):
     restroom_id = models.ForeignKey(Restroom, on_delete=models.CASCADE)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     verified = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{Restroom.objects.get(id=self.restroom_id_id).title[:50]}..."
