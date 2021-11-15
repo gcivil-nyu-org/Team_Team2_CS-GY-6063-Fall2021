@@ -314,6 +314,7 @@ def claim_restroom(request, r_id):
     )
     if current_claims:
         raise Http404("Restroom has already been claimed")
+    current_user = request.user
     if request.method == "POST":
         form = ClaimRestroom(request.POST)
         if form.is_valid():
