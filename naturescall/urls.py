@@ -12,6 +12,7 @@ urlpatterns = [
     path("filter_restroom/", views.filter_restroom, name="filter_restroom"),
     path("rate_restroom/<int:r_id>", views.rate_restroom, name="rate_restroom"),
     path("delete_rating/<int:r_id>", views.delete_rating, name="delete_rating"),
+    path("claim_restroom/<int:r_id>", views.claim_restroom, name="claim_restroom"),
 ]
 # urlpatterns += [
 #     path("accounts/", include("accounts.urls", namespace="accounts")),
