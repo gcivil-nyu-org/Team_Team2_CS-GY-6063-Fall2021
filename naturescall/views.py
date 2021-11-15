@@ -43,9 +43,9 @@ def search_restroom(request):
     context = {}
     # form = LocationForm(request.POST or None)
     # location = request.POST["location"]
-    if request.POST.get("searched") is not None:
+    if request.GET.get("searched") is not None:
         map = str(os.getenv("map"))
-        location = request.POST["searched"]
+        location = request.GET["searched"]
         tableFilter = RestroomFilter()
         k = search(api_key, '"restroom","food","public"', location, 20)
         data = []
@@ -143,7 +143,7 @@ def search_restroom(request):
 def filter_restroom(request):
     dbRestroom = Restroom.objects.all()
     tableFilter = RestroomFilter(request.GET, queryset=dbRestroom)
-    location = request.GET["filtered"]
+    location = request.GET.get("filtered")
     map = str(os.getenv("map"))
     yelp_data = search(api_key, '"restroom","food","public"', location, 20)
     data = []
