@@ -50,7 +50,7 @@ def search_restroom(request):
             data = []
             loc = []
             loc1 = []
-            url=""
+            url = ""
             if not k.get("error"):
                 data = k["businesses"]
                 data.sort(key=getDistance)
@@ -69,7 +69,9 @@ def search_restroom(request):
                     addr = str(restroom["location"]["display_address"])
                     restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
                 url = str(
-                    google_url(loc, loc1, width=800, height=740, center=location, key=map)
+                    google_url(
+                        loc, loc1, width=800, height=740, center=location, key=map
+                    )
                 )
             context["location"] = location
             context["data"] = data
@@ -94,7 +96,7 @@ def search_restroom(request):
             data2 = []
             loc = []
             loc1 = []
-            url=""
+            url = ""
             if not yelp_data.get("error"):
                 data1 = yelp_data["businesses"]
                 data1.sort(key=getDistance)
@@ -118,14 +120,20 @@ def search_restroom(request):
                         data.append(restroom)
                         r_coordinates_lat = restroom["coordinates"]["latitude"]
                         r_coordinates_long = restroom["coordinates"]["longitude"]
-                        loc1.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
+                        loc1.append(
+                            str(r_coordinates_lat) + "," + str(r_coordinates_long)
+                        )
                     else:
                         data2.append(restroom)
                         r_coordinates_lat = restroom["coordinates"]["latitude"]
                         r_coordinates_long = restroom["coordinates"]["longitude"]
-                        loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
+                        loc.append(
+                            str(r_coordinates_lat) + "," + str(r_coordinates_long)
+                        )
                 url = str(
-                    google_url(loc, loc1, width=600, height=740, center=location, key=map)
+                    google_url(
+                        loc, loc1, width=600, height=740, center=location, key=map
+                    )
                 )
             context["tableFilter"] = tableFilter
             context["data"] = data
@@ -144,7 +152,7 @@ def search_restroom(request):
         data2 = []
         loc = []
         loc1 = []
-        url=""
+        url = ""
         if not yelp_data.get("error"):
             data1 = yelp_data["businesses"]
             data1.sort(key=getDistance)
