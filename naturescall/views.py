@@ -50,26 +50,29 @@ def search_restroom(request):
             data = []
             loc = []
             loc1 = []
+            url = ""
             if not k.get("error"):
                 data = k["businesses"]
                 data.sort(key=getDistance)
-            for restroom in data:
-                restroom["distance"] = int(restroom["distance"])
-                r_id = restroom["id"]
-                r_coordinates_lat = restroom["coordinates"]["latitude"]
-                r_coordinates_long = restroom["coordinates"]["longitude"]
-                loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
-                querySet = Restroom.objects.filter(yelp_id=r_id)
-                if not querySet:
-                    restroom["our_rating"] = "no rating"
-                    restroom["db_id"] = ""
-                else:
-                    restroom["db_id"] = querySet.values()[0]["id"]
-                addr = str(restroom["location"]["display_address"])
-                restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
-            url = str(
-                google_url(loc, loc1, width=800, height=740, center=location, key=map)
-            )
+                for restroom in data:
+                    restroom["distance"] = int(restroom["distance"])
+                    r_id = restroom["id"]
+                    r_coordinates_lat = restroom["coordinates"]["latitude"]
+                    r_coordinates_long = restroom["coordinates"]["longitude"]
+                    loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
+                    querySet = Restroom.objects.filter(yelp_id=r_id)
+                    if not querySet:
+                        restroom["our_rating"] = "no rating"
+                        restroom["db_id"] = ""
+                    else:
+                        restroom["db_id"] = querySet.values()[0]["id"]
+                    addr = str(restroom["location"]["display_address"])
+                    restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
+                url = str(
+                    google_url(
+                        loc, loc1, width=800, height=740, center=location, key=map
+                    )
+                )
             context["location"] = location
             context["data"] = data
             context["tableFilter"] = tableFilter
@@ -93,9 +96,66 @@ def search_restroom(request):
             data2 = []
             loc = []
             loc1 = []
+            url = ""
             if not yelp_data.get("error"):
                 data1 = yelp_data["businesses"]
                 data1.sort(key=getDistance)
+                for restroom in data1:
+                    restroom["distance"] = int(restroom["distance"])
+                    r_id = restroom["id"]
+                    querySet = Restroom.objects.filter(yelp_id=r_id)
+                    if not querySet:
+                        restroom["our_rating"] = "no rating"
+                        restroom["db_id"] = ""
+                    else:
+                        restroom["db_id"] = querySet.values()[0]["id"]
+                    addr = str(restroom["location"]["display_address"])
+                    restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
+                id_obj_pairs = {}
+                for obj in tableFilter.qs:
+                    id = obj.id
+                    id_obj_pairs[id] = obj
+                for restroom in data1:
+                    if restroom["db_id"] in id_obj_pairs:
+                        data.append(restroom)
+                        r_coordinates_lat = restroom["coordinates"]["latitude"]
+                        r_coordinates_long = restroom["coordinates"]["longitude"]
+                        loc1.append(
+                            str(r_coordinates_lat) + "," + str(r_coordinates_long)
+                        )
+                    else:
+                        data2.append(restroom)
+                        r_coordinates_lat = restroom["coordinates"]["latitude"]
+                        r_coordinates_long = restroom["coordinates"]["longitude"]
+                        loc.append(
+                            str(r_coordinates_lat) + "," + str(r_coordinates_long)
+                        )
+                url = str(
+                    google_url(
+                        loc, loc1, width=600, height=740, center=location, key=map
+                    )
+                )
+            context["tableFilter"] = tableFilter
+            context["data"] = data
+            context["data1"] = data2
+            context["map"] = url
+            request.session["search_location"] = location
+            return render(request, "naturescall/filtered_search.html", context)
+    else:
+        dbRestroom = Restroom.objects.all()
+        tableFilter = RestroomFilter(request.GET, queryset=dbRestroom)
+        location = request.session["search_location"]
+        map = str(os.getenv("map"))
+        yelp_data = search(api_key, '"restroom","food","public"', location, 20)
+        data = []
+        data1 = []
+        data2 = []
+        loc = []
+        loc1 = []
+        url = ""
+        if not yelp_data.get("error"):
+            data1 = yelp_data["businesses"]
+            data1.sort(key=getDistance)
             for restroom in data1:
                 restroom["distance"] = int(restroom["distance"])
                 r_id = restroom["id"]
@@ -125,55 +185,6 @@ def search_restroom(request):
             url = str(
                 google_url(loc, loc1, width=600, height=740, center=location, key=map)
             )
-            context["tableFilter"] = tableFilter
-            context["data"] = data
-            context["data1"] = data2
-            context["map"] = url
-            request.session["search_location"] = location
-            return render(request, "naturescall/filtered_search.html", context)
-    else:
-        dbRestroom = Restroom.objects.all()
-        tableFilter = RestroomFilter(request.GET, queryset=dbRestroom)
-        location = request.session["search_location"]
-        map = str(os.getenv("map"))
-        yelp_data = search(api_key, '"restroom","food","public"', location, 20)
-        data = []
-        data1 = []
-        data2 = []
-        loc = []
-        loc1 = []
-        if not yelp_data.get("error"):
-            data1 = yelp_data["businesses"]
-            data1.sort(key=getDistance)
-        for restroom in data1:
-            restroom["distance"] = int(restroom["distance"])
-            r_id = restroom["id"]
-            querySet = Restroom.objects.filter(yelp_id=r_id)
-            if not querySet:
-                restroom["our_rating"] = "no rating"
-                restroom["db_id"] = ""
-            else:
-                restroom["db_id"] = querySet.values()[0]["id"]
-            addr = str(restroom["location"]["display_address"])
-            restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
-        id_obj_pairs = {}
-        for obj in tableFilter.qs:
-            id = obj.id
-            id_obj_pairs[id] = obj
-        for restroom in data1:
-            if restroom["db_id"] in id_obj_pairs:
-                data.append(restroom)
-                r_coordinates_lat = restroom["coordinates"]["latitude"]
-                r_coordinates_long = restroom["coordinates"]["longitude"]
-                loc1.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
-            else:
-                data2.append(restroom)
-                r_coordinates_lat = restroom["coordinates"]["latitude"]
-                r_coordinates_long = restroom["coordinates"]["longitude"]
-                loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
-        url = str(
-            google_url(loc, loc1, width=600, height=740, center=location, key=map)
-        )
         context["tableFilter"] = tableFilter
         context["data"] = data
         context["data1"] = data2
