@@ -313,7 +313,7 @@ def claim_restroom(request, r_id):
         restroom_id=current_restroom, verified=True
     )
     if current_claims:
-        raise Http404("Restroom has already been claimed")
+        raise Http404("Access Denied")
     current_user = request.user
     if request.method == "POST":
         form = ClaimRestroom(request.POST)
@@ -327,6 +327,19 @@ def claim_restroom(request, r_id):
         form = ClaimRestroom()
     context = {"form": form, "title": current_restroom.title}
     return render(request, "naturescall/claim_restroom.html", context)
+
+
+def manage_restroom(request, r_id):
+    """manage a restroom"""
+    current_restroom = get_object_or_404(Restroom, id=r_id)
+    current_user = request.user
+    valid_claim = ClaimedRestroom.objects.filter(
+        restroom_id=current_restroom, user_id=current_user, verified=True
+    )
+    if not valid_claim:
+        raise Http404("Access Denied")
+    context = {"title": current_restroom.title}
+    return render(request, "naturescall/manage_restroom.html", context)
 
 
 # Helper function: make an API request

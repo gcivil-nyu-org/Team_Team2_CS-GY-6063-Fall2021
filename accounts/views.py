@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
-from naturescall.models import Rating
+from naturescall.models import Rating, ClaimedRestroom
 
 # from django.contrib.auth import login, authenticate
 from .forms import SignupForm
@@ -90,8 +90,9 @@ def view_profile(request):
             initial={"profilename": request.user.username},
         )
     current_user = request.user
-    query_set = Rating.objects.filter(user_id=current_user)
-    context = {"u_form": u_form, "p_form": p_form, "ratings": query_set}
+    ratings = Rating.objects.filter(user_id=current_user)
+    claims = ClaimedRestroom.objects.filter(user_id=current_user, verified=True)
+    context = {"u_form": u_form, "p_form": p_form, "ratings": ratings, "claims": claims}
     return render(request, "accounts/profile.html", context)
 
 
