@@ -20,13 +20,13 @@
 			</p>
 			<div class="collapse" id="collapseExample">
 				<div class="card card-body">
-					<form class="form-inline my-2 my-lg-0" method="GET" enctype="multipart/form-data">
+					<form class="form-inline my-2 my-lg-0" method="GET">
 						{% csrf_token %}
-						<fieldset class="form-group">
-							<input class="form-control mr-sm-2" type="search" placeholder="Search Location" name = "filtered" required="required">
+				<!--		<fieldset class="form-group">
+				<input class="form-control mr-sm-2" type="search" placeholder="Search Location" name = "filtered" required="required"> -->
 							{{tableFilter.form.as_p}}
-						</fieldset>
-						<button href="{% url 'naturescall:filter_restroom'%}" class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+							<!--		</fieldset> -->
+						<button href="{% url 'naturescall:search_restroom'%}" class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
 					</form>
 				</div>
 			</div>

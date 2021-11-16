@@ -76,7 +76,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "teamtwo.wsgi.application"
-
+AUTH_PROFILE_MODULE = "accounts.Profile"
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
