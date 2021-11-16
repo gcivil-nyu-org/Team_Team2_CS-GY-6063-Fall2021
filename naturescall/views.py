@@ -451,6 +451,7 @@ def restroom_detail(request, r_id):
 
 def claim_restroom(request, r_id):
     """claim a restroom"""
+    current_user = request.user
     current_restroom = get_object_or_404(Restroom, id=r_id)
     current_claims = ClaimedRestroom.objects.filter(
         restroom_id=current_restroom, verified=True
