@@ -5,12 +5,12 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 		<!-- Bootstrap CSS -->
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-		<title>Naturescal</title>
+		<title>Nature's Call</title>
 	</head>
 	<body>
 		<nav class = "navbar navbar-expand-lg navbar-dark bg-dark">
 			{% block home %}
-			<a class="navbar-brand" href="/naturescall">Naturescall</a>
+			<a class="navbar-brand" href="{% url 'naturescall:index' %}">Naturescall</a>
 			{% endblock %}
 		</nav>
 		<div class="container">
@@ -45,8 +45,9 @@
 								<li>Rating: {{rating.rating}}</li>
 								<li>Headline: {{rating.headline}}</li>
 								<li>Comment: {{rating.comment}}</li>
-								<a href="{% url 'accounts:edit_rating' rating.id %}" >Edit</a><br>
-								<a href="{% url 'accounts:delete_rating' rating.id %}" >Delete</a>
+{#								<a href="{% url 'accounts:edit_rating' rating.id %}" >Edit</a><br>#}
+								<a href="{% url 'naturescall:rate_restroom' rating.restroom_id_id %}" >Edit</a><br>
+								<a href="{% url 'naturescall:delete_rating' rating.restroom_id_id %}" >Delete</a>
 							</div>
 						</div>
 					</div>

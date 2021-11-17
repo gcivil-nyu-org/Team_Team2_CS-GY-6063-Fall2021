@@ -1,10 +1,10 @@
 {% extends "naturescall/index.html" %}
 
 {% block home %}
-<a class="navbar-brand" href="/naturescall">Nature's Call</a>
+<a class="navbar-brand" href="{% url 'naturescall:index' %}">Nature's Call</a>
 {% endblock %}
 {% block form %}
-<form class="form-inline my-2 my-lg-0" method="POST" action= "/naturescall/search_restroom/">
+<form class="form-inline my-2 my-lg-0" method="GET" action= "{% url 'naturescall:search_restroom' %}">
 	{% csrf_token %}
 <input class="form-control mr-sm-2" type="search" placeholder="Search Location" name = "searched" required="required">
 <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
@@ -20,13 +20,13 @@
 			</p>
 			<div class="collapse" id="collapseExample">
 				<div class="card card-body">
-					<form class="form-inline my-2 my-lg-0" method="GET" enctype="multipart/form-data">
+					<form class="form-inline my-2 my-lg-0" method="GET">
 						{% csrf_token %}
-						<fieldset class="form-group">
-							<input class="form-control mr-sm-2" type="search" placeholder="Search Location" name = "filtered" required="required">
+				<!--		<fieldset class="form-group">
+				<input class="form-control mr-sm-2" type="search" placeholder="Search Location" name = "filtered" required="required"> -->
 							{{tableFilter.form.as_p}}
-						</fieldset>
-						<button href="{% url 'naturescall:filter_restroom'%}" class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+							<!--		</fieldset> -->
+						<button href="{% url 'naturescall:search_restroom'%}" class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
 					</form>
 				</div>
 			</div>

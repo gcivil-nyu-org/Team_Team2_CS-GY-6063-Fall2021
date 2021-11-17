@@ -106,7 +106,7 @@ class ViewTests(TestCase):
         A search with an invalid search string should yield no results
         but should return a valid webpage
         """
-        response = self.client.post(
+        response = self.client.get(
             reverse("naturescall:search_restroom"), data={"searched": "szzzzz"}
         )
         self.assertEqual(response.status_code, 200)
@@ -117,8 +117,9 @@ class ViewTests(TestCase):
         A search with a valid search string with an empty database
         should return a valid webpage with 20 "Add Restroom" results
         """
-        response = self.client.post(
-            reverse("naturescall:search_restroom"), data={"searched": "nyu tandon"}
+        response = self.client.get(
+            reverse("naturescall:search_restroom"),
+            data={"searched": "washigton square park"},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(str(response.content).count("Add Restroom"), 20)
@@ -129,20 +130,14 @@ class ViewTests(TestCase):
         should return a valid webpage with 19 "Add Restroom" results
         """
         desc = "TEST DESCRIPTION"
-        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        yelp_id = "FkA9aoMhWO4XKFMTuTnl4Q"
         create_restroom(yelp_id, desc)
-        response = self.client.post(
-            reverse("naturescall:search_restroom"), data={"searched": "nyu tandon"}
+        response = self.client.get(
+            reverse("naturescall:search_restroom"),
+            data={"searched": "washigton square park"},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(str(response.content).count("Add Restroom"), 19)
-
-    def test_access_signup(self):
-        """
-        A get request to the signup page should yield a valid response
-        """
-        response = self.client.get(reverse("accounts:signup"))
-        self.assertEqual(response.status_code, 200)
 
     def test_get_request_add_restroom_not_logged_in(self):
         """
@@ -174,50 +169,6 @@ class ViewTests(TestCase):
         yelp_id = "E6h-sMLmF86cuituw5zYxwXXXXXX"
         response = self.client.get(reverse("naturescall:add_restroom", args=(yelp_id,)))
         self.assertEqual(response.status_code, 404)
-
-    def test_account_creation_valid_form(self):
-        """
-        A valid form should yield a redirect upon submission and
-        add a user to the database
-        """
-        response = self.client.post(
-            reverse("accounts:signup"),
-            data={
-                "username": "test_user",
-                "email": "test_user@email.com",
-                "first_name": "test",
-                "last_name": "user",
-                "password1": "BDbdKDwpSt",
-                "password2": "BDbdKDwpSt",
-            },
-        )
-        all_users = User.objects.filter(id=1)
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(len(all_users), 1)
-
-    def test_account_creation_invalid_form(self):
-        """
-        An invalid form should yield an error upon submission
-        """
-        response = self.client.post(
-            reverse("accounts:signup"),
-            data={
-                "username": "test_user",
-                "email": "test_user@email.com",
-                "first_name": "test",
-                "last_name": "user",
-                "password1": "BDbdKDwpSt",
-                "password2": "BDbdKDwpStX",
-            },
-        )
-        self.assertContains(response, "Unsuccessful registration. Invalid information.")
-
-    def test_invalid_verification_link(self):
-        """
-        An invalid verification request should yield a redirect
-        """
-        response = self.client.get(reverse("accounts:activate", args=(1, 1)))
-        self.assertEqual(response.status_code, 302)
 
     def test_get_rating_one_restroom(self):
         """
@@ -254,10 +205,10 @@ class ViewTests(TestCase):
         self.assertEqual(len(Rating.objects.all()), 1)
         self.assertEqual(Rating.objects.all()[0].headline, "headline1")
 
-    def test_rating_previously_rated_restroom(self):
+    def test_seeing_previously_rated_restroom(self):
         """
-        Once a restroom has been rated, the same user should not be able
-        to rate it again
+        Once a restroom has been rated, the same user should be able
+        to see that rating
         """
         desc = "TEST DESCRIPTION"
         yelp_id = "E6h-sMLmF86cuituw5zYxw"
@@ -272,11 +223,67 @@ class ViewTests(TestCase):
             comment="comment1",
         )
         response = self.client.get(reverse("naturescall:rate_restroom", args=(1,)))
-        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Rating.objects.all()[0].headline, "headline1")
+
+    def test_rating_previously_rated_restroom(self):
+        """
+        Once a restroom has been rated, that rating should be
+        editable using the restroom_detail link
+        """
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        Rating.objects.create(
+            restroom_id=rr,
+            user_id=user,
+            rating="4",
+            headline="headline1",
+            comment="comment1",
+        )
+        response = self.client.post(
+            reverse("naturescall:rate_restroom", args=(1,)),
+            data={
+                "rating": "2",
+                "headline": "headline2",
+                "comment": "comment2",
+            },
+        )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(len(Rating.objects.all()), 1)
-        self.assertEqual(Rating.objects.all()[0].headline, "headline1")
-        self.assertIn(messages[0], "Sorry, You have already rated this restroom!!")
+        self.assertEqual(Rating.objects.all()[0].headline, "headline2")
+
+    def test_delete_non_existent_rating(self):
+        """
+        user A will receive 404 message when trying to delete rating does not exist
+        """
+        user1 = User.objects.create_user("Simon1", "simon1@email.com")
+        self.client.force_login(user=user1)
+        response = self.client.get(reverse("naturescall:delete_rating", args=(1,)))
+        self.assertEqual(response.status_code, 404)
+
+    def test_delete_rating(self):
+        """
+        A user can delete rating
+        """
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        Rating.objects.create(
+            restroom_id=rr,
+            user_id=user,
+            rating="4",
+            headline="headline1",
+            comment="comment1",
+        )
+        response = self.client.get(reverse("naturescall:delete_rating", args=(1,)))
+        self.assertEqual(response.status_code, 302)
+        messages = [m.message for m in get_messages(response.wsgi_request)]
+        self.assertIn(messages[0], "Your rating has been deleted!")
 
     def test_restroom_rating_calculation(self):
         """
@@ -323,53 +330,53 @@ class ViewTests(TestCase):
         f = RestroomFilter(data, queryset=qs)
         self.assertEqual(f.qs[0], r1)
 
-    def test_filter_search_restroom(self):
-        """to check success response of GET request from search_restroom page"""
+    def test_unauthenticated_user_search_restroom(self):
+        """testing search result for unauthenticated user"""
         response = self.client.get(
             reverse("naturescall:search_restroom"),
-            data={
-                "filtered": "nyu tandon",
-                "accessible": "False",
-                "family_friendly": "False",
-                "transaction_not_required": "False",
-            },
+            data={"searched": "washigton square park"},
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context["data"], [])
+        self.assertEqual(len(response.context["data"]), 20)
 
-    def test_result_filter_restroom(self):
-        """to check sucess reponse of GET request from filter_restroom page"""
-        response = self.client.get(
-            reverse("naturescall:filter_restroom"), data={"filtered": "nyu tandon"}
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context["data"], [])
-
-    def test_unfiltered_restroom_result(self):
-        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+    def test_unauthenticated_filter_search_restroom(self):
+        """Testing filter search for unauthenticated user"""
+        yelp_id = "FkA9aoMhWO4XKFMTuTnl4Q"
         desc = "TEST Accessibile= true"
+        session = self.client.session
+        session["search_location"] = "washigton square park"
+        session.save()
         Restroom.objects.create(yelp_id=yelp_id, description=desc, accessible="True")
         data = {
-            "filtered": "Tandon",
+            "location": session["search_location"],
             "accessible": "True",
             "family_friendly": "False",
             "transaction_not_required": "False",
         }
-        response = self.client.get(reverse("naturescall:filter_restroom"), data=data)
+        response = self.client.get(reverse("naturescall:search_restroom"), data=data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["data"]), 1)
         self.assertEqual(len(response.context["data1"]), 19)
 
-    def test_unfiltered_from_search_restroom(self):
-        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+    def test_authenticated_user_search_restroom(self):
+        """testing search result for authenticated user"""
+        yelp_id = "FkA9aoMhWO4XKFMTuTnl4Q"
         desc = "TEST Accessibile= true"
+        user = User.objects.create_user("Howard", "howard@gmail.com")
+        self.client.force_login(user=user)
+        self.client.post(
+            reverse("accounts:profile"),
+            data={
+                "email": "Hao@gmail.com",
+                "profilename": "Howard",
+                "accessible": "True",
+                "family_friendly": "False",
+                "transaction_not_required": "False",
+            },
+        )
+
         Restroom.objects.create(yelp_id=yelp_id, description=desc, accessible="True")
-        data = {
-            "filtered": "Tandon",
-            "accessible": "True",
-            "family_friendly": "False",
-            "transaction_not_required": "False",
-        }
+        data = {"searched": "washigton square park"}
         response = self.client.get(reverse("naturescall:search_restroom"), data=data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["data"]), 1)

@@ -1,9 +1,9 @@
-from naturescall.models import Restroom, Rating
+from naturescall.models import Restroom, Rating, ClaimedRestroom
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponseRedirect, Http404
 
 # from .forms import LocationForm
-from .forms import AddRestroom, AddRating
+from .forms import AddRestroom, AddRating, ClaimRestroom
 import requests
 from django.contrib.auth.decorators import login_required
 from .filters import RestroomFilter
@@ -41,11 +41,164 @@ def index(request):
 # display the restrooms around the location
 def search_restroom(request):
     context = {}
+    if request.GET.get("searched") is not None:
+        if not request.user.is_authenticated:
+            map = str(os.getenv("map"))
+            location = request.GET["searched"]
+            tableFilter = RestroomFilter()
+            k = search(api_key, '"restroom","food","public"', location, 20)
+            data = []
+            loc = []
+            loc1 = []
+            url = ""
+            if not k.get("error"):
+                data = k["businesses"]
+                data.sort(key=getDistance)
+                for restroom in data:
+                    restroom["distance"] = int(restroom["distance"])
+                    r_id = restroom["id"]
+                    r_coordinates_lat = restroom["coordinates"]["latitude"]
+                    r_coordinates_long = restroom["coordinates"]["longitude"]
+                    loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
+                    querySet = Restroom.objects.filter(yelp_id=r_id)
+                    if not querySet:
+                        restroom["our_rating"] = "no rating"
+                        restroom["db_id"] = ""
+                    else:
+                        restroom["db_id"] = querySet.values()[0]["id"]
+                    addr = str(restroom["location"]["display_address"])
+                    restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
+                url = str(
+                    google_url(
+                        loc, loc1, width=800, height=740, center=location, key=map
+                    )
+                )
+            context["location"] = location
+            context["data"] = data
+            context["tableFilter"] = tableFilter
+            context["map"] = url
+            request.session["search_location"] = location
+            return render(request, "naturescall/search_restroom.html", context)
+        else:
+            dbRestroom = Restroom.objects.all()
+            location = request.GET["searched"]
+            profile = request.user.profile
+            d = {
+                "accessible": profile.accessible,
+                "family_friendly": profile.family_friendly,
+                "transaction_not_required": profile.transaction_not_required,
+            }
+            tableFilter = RestroomFilter(d, queryset=dbRestroom)
+            map = str(os.getenv("map"))
+            yelp_data = search(api_key, '"restroom","food","public"', location, 20)
+            data = []
+            data1 = []
+            data2 = []
+            loc = []
+            loc1 = []
+            url = ""
+            if not yelp_data.get("error"):
+                data1 = yelp_data["businesses"]
+                data1.sort(key=getDistance)
+                for restroom in data1:
+                    restroom["distance"] = int(restroom["distance"])
+                    r_id = restroom["id"]
+                    querySet = Restroom.objects.filter(yelp_id=r_id)
+                    if not querySet:
+                        restroom["our_rating"] = "no rating"
+                        restroom["db_id"] = ""
+                    else:
+                        restroom["db_id"] = querySet.values()[0]["id"]
+                    addr = str(restroom["location"]["display_address"])
+                    restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
+                id_obj_pairs = {}
+                for obj in tableFilter.qs:
+                    id = obj.id
+                    id_obj_pairs[id] = obj
+                for restroom in data1:
+                    if restroom["db_id"] in id_obj_pairs:
+                        data.append(restroom)
+                        r_coordinates_lat = restroom["coordinates"]["latitude"]
+                        r_coordinates_long = restroom["coordinates"]["longitude"]
+                        loc1.append(
+                            str(r_coordinates_lat) + "," + str(r_coordinates_long)
+                        )
+                    else:
+                        data2.append(restroom)
+                        r_coordinates_lat = restroom["coordinates"]["latitude"]
+                        r_coordinates_long = restroom["coordinates"]["longitude"]
+                        loc.append(
+                            str(r_coordinates_lat) + "," + str(r_coordinates_long)
+                        )
+                url = str(
+                    google_url(
+                        loc, loc1, width=600, height=740, center=location, key=map
+                    )
+                )
+            context["tableFilter"] = tableFilter
+            context["data"] = data
+            context["data1"] = data2
+            context["map"] = url
+            request.session["search_location"] = location
+            return render(request, "naturescall/filtered_search.html", context)
+    else:
+        dbRestroom = Restroom.objects.all()
+        tableFilter = RestroomFilter(request.GET, queryset=dbRestroom)
+        location = request.session["search_location"]
+        map = str(os.getenv("map"))
+        yelp_data = search(api_key, '"restroom","food","public"', location, 20)
+        data = []
+        data1 = []
+        data2 = []
+        loc = []
+        loc1 = []
+        url = ""
+        if not yelp_data.get("error"):
+            data1 = yelp_data["businesses"]
+            data1.sort(key=getDistance)
+            for restroom in data1:
+                restroom["distance"] = int(restroom["distance"])
+                r_id = restroom["id"]
+                querySet = Restroom.objects.filter(yelp_id=r_id)
+                if not querySet:
+                    restroom["our_rating"] = "no rating"
+                    restroom["db_id"] = ""
+                else:
+                    restroom["db_id"] = querySet.values()[0]["id"]
+                addr = str(restroom["location"]["display_address"])
+                restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
+            id_obj_pairs = {}
+            for obj in tableFilter.qs:
+                id = obj.id
+                id_obj_pairs[id] = obj
+            for restroom in data1:
+                if restroom["db_id"] in id_obj_pairs:
+                    data.append(restroom)
+                    r_coordinates_lat = restroom["coordinates"]["latitude"]
+                    r_coordinates_long = restroom["coordinates"]["longitude"]
+                    loc1.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
+                else:
+                    data2.append(restroom)
+                    r_coordinates_lat = restroom["coordinates"]["latitude"]
+                    r_coordinates_long = restroom["coordinates"]["longitude"]
+                    loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
+            url = str(
+                google_url(loc, loc1, width=600, height=740, center=location, key=map)
+            )
+        context["tableFilter"] = tableFilter
+        context["data"] = data
+        context["data1"] = data2
+        context["map"] = url
+        return render(request, "naturescall/filtered_search.html", context)
+
+
+"""def search_restroom(request):
+    context = {}
     # form = LocationForm(request.POST or None)
     # location = request.POST["location"]
-    if request.POST.get("searched") is not None:
+    if request.GET.get("searched") is not None:
         map = str(os.getenv("map"))
-        location = request.POST["searched"]
+        location = request.GET["searched"]
         tableFilter = RestroomFilter()
         k = search(api_key, '"restroom","food","public"', location, 20)
         data = []
@@ -137,13 +290,13 @@ def search_restroom(request):
         context["map"] = url
         request.session["search_location"] = location
         return render(request, "naturescall/filtered_search.html", context)
-
+"""
 
 # Filtered search results-:
-def filter_restroom(request):
+"""def filter_restroom(request):
     dbRestroom = Restroom.objects.all()
     tableFilter = RestroomFilter(request.GET, queryset=dbRestroom)
-    location = request.GET["filtered"]
+    location = request.GET.get("filtered")
     map = str(os.getenv("map"))
     yelp_data = search(api_key, '"restroom","food","public"', location, 20)
     data = []
@@ -189,6 +342,7 @@ def filter_restroom(request):
     context = {"tableFilter": tableFilter, "data": data, "data1": data2, "map": url}
     request.session["search_location"] = location
     return render(request, "naturescall/filtered_search.html", context)
+"""
 
 
 @login_required(login_url="login")
@@ -196,27 +350,40 @@ def rate_restroom(request, r_id):
     """Rate a restroom"""
     current_restroom = get_object_or_404(Restroom, id=r_id)
     current_user = request.user
+    rating_set = Rating.objects.filter(restroom_id=r_id, user_id=current_user)
     if request.method == "POST":
         form = AddRating(data=request.POST)
         if form.is_valid():
-            new_entry = form.save(commit=False)
-            new_entry.user_id = current_user
-            new_entry.restroom_id = current_restroom
-            new_entry.save()
+            entry = form.save(commit=False)
+            entry.user_id = current_user
+            entry.restroom_id = current_restroom
+            if rating_set:
+                entry.id = rating_set[0].id
+            entry.save()
             msg = "Congratulations, Your rating has been saved!"
             messages.success(request, f"{msg}")
             return redirect("naturescall:restroom_detail", r_id=current_restroom.id)
     else:
-        # check for redundant rating
-        querySet = Rating.objects.filter(restroom_id=r_id, user_id=current_user)
-        if querySet:
-            msg = "Sorry, You have already rated this restroom!!"
-            messages.success(request, f"{msg}")
-            return redirect("naturescall:restroom_detail", r_id=current_restroom.id)
-
-    form = AddRating()
+        if rating_set:
+            form = AddRating(instance=rating_set[0])
+        else:
+            form = AddRating()
     context = {"form": form, "title": current_restroom.title}
     return render(request, "naturescall/rate_restroom.html", context)
+
+
+@login_required
+def delete_rating(request, r_id):
+    """delete a restroom rating"""
+    current_user = request.user
+    rating_set = Rating.objects.filter(restroom_id=r_id, user_id=current_user)
+    if not rating_set:
+        raise Http404("Sorry, no rating exists")
+    rating_entry = rating_set[0]
+    rating_entry.delete()
+    msg = "Your rating has been deleted!"
+    messages.success(request, f"{msg}")
+    return HttpResponseRedirect(reverse("naturescall:index"))
 
 
 # The page for adding new restroom to our database
@@ -260,29 +427,60 @@ def calculate_rating(r_id):
 # The page for showing one restroom details
 def restroom_detail(request, r_id):
     """Show a single restroom"""
-    querySet = Restroom.objects.filter(id=r_id)
+    current_restroom = get_object_or_404(Restroom, id=r_id)
+    current_user = request.user
     res = {}
-    if querySet:
-        yelp_id = querySet.values()[0]["yelp_id"]
-        yelp_data = get_business(api_key, yelp_id)
-        yelp_data["db_id"] = r_id
-        yelp_data["rating"] = calculate_rating(r_id)
-        yelp_data["accessible"] = querySet.values()[0]["accessible"]
-        yelp_data["family_friendly"] = querySet.values()[0]["family_friendly"]
-        yelp_data["transaction_not_required"] = querySet.values()[0][
-            "transaction_not_required"
-        ]
+    yelp_id = current_restroom.yelp_id
+    yelp_data = get_business(api_key, yelp_id)
+    yelp_data["db_id"] = r_id
+    yelp_data["rating"] = calculate_rating(r_id)
+    yelp_data["accessible"] = current_restroom.accessible
+    yelp_data["family_friendly"] = current_restroom.family_friendly
+    yelp_data["transaction_not_required"] = current_restroom.transaction_not_required
 
-        res["yelp_data"] = yelp_data
-        addr = str(yelp_data["location"]["display_address"])
-        res["addr"] = addr.translate(str.maketrans("", "", "[]'"))
-        res["desc"] = querySet.values()[0]["description"]
-    else:
-        raise Http404("Restroom does not exist")
+    res["yelp_data"] = yelp_data
+    addr = str(yelp_data["location"]["display_address"])
+    res["addr"] = addr.translate(str.maketrans("", "", "[]'"))
+    res["desc"] = current_restroom.description
+
+    # determine if claim button should be shown
+    show_claim = True
+    all_claims = ClaimedRestroom.objects.filter(restroom_id=current_restroom)
+    for claim in all_claims:
+        if claim.verified or claim.user_id == current_user:
+            show_claim = False
 
     ratings = Rating.objects.filter(restroom_id=r_id)
-    context = {"res": res, "ratings": ratings, "map_key": map_embedded_key}
+    context = {
+        "res": res,
+        "ratings": ratings,
+        "map_key": map_embedded_key,
+        "show_claim": show_claim,
+    }
     return render(request, "naturescall/restroom_detail.html", context)
+
+
+def claim_restroom(request, r_id):
+    """claim a restroom"""
+    current_user = request.user
+    current_restroom = get_object_or_404(Restroom, id=r_id)
+    current_claims = ClaimedRestroom.objects.filter(
+        restroom_id=current_restroom, verified=True
+    )
+    if current_claims:
+        raise Http404("Restroom has already been claimed")
+    if request.method == "POST":
+        form = ClaimRestroom(request.POST)
+        if form.is_valid():
+            claim = ClaimedRestroom()
+            claim.restroom_id = current_restroom
+            claim.user_id = current_user
+            claim.save()
+            return redirect("naturescall:restroom_detail", r_id=r_id)
+    else:
+        form = ClaimRestroom()
+    context = {"form": form, "title": current_restroom.title}
+    return render(request, "naturescall/claim_restroom.html", context)
 
 
 # Helper function: make an API request
