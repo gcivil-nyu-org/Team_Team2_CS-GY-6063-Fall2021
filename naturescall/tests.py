@@ -130,10 +130,11 @@ class ViewTests(TestCase):
         should return a valid webpage with 19 "Add Restroom" results
         """
         desc = "TEST DESCRIPTION"
-        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        yelp_id = "FkA9aoMhWO4XKFMTuTnl4Q"
         create_restroom(yelp_id, desc)
         response = self.client.get(
-            reverse("naturescall:search_restroom"), data={"searched": "tandon"}
+            reverse("naturescall:search_restroom"),
+            data={"searched": "washigton square park"},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(str(response.content).count("Add Restroom"), 18)
@@ -329,53 +330,53 @@ class ViewTests(TestCase):
         f = RestroomFilter(data, queryset=qs)
         self.assertEqual(f.qs[0], r1)
 
-    def test_filter_search_restroom(self):
-        """to check success response of GET request from search_restroom page"""
+    def test_unauthenticated_user_search_restroom(self):
+        """testing search result for unauthenticated user"""
         response = self.client.get(
             reverse("naturescall:search_restroom"),
-            data={
-                "filtered": "nyu tandon",
-                "accessible": "False",
-                "family_friendly": "False",
-                "transaction_not_required": "False",
-            },
+            data={"searched": "washigton square park"},
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context["data"], [])
+        self.assertEqual(len(response.context["data"]), 20)
 
-    def test_result_filter_restroom(self):
-        """to check sucess reponse of GET request from filter_restroom page"""
-        response = self.client.get(
-            reverse("naturescall:filter_restroom"), data={"filtered": "nyu tandon"}
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context["data"], [])
-
-    def test_unfiltered_restroom_result(self):
-        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+    def test_unauthenticated_filter_search_restroom(self):
+        """Testing filter search for unauthenticated user"""
+        yelp_id = "FkA9aoMhWO4XKFMTuTnl4Q"
         desc = "TEST Accessibile= true"
+        session = self.client.session
+        session["search_location"] = "washigton square park"
+        session.save()
         Restroom.objects.create(yelp_id=yelp_id, description=desc, accessible="True")
         data = {
-            "filtered": "tandon",
+            "location": session["search_location"],
             "accessible": "True",
             "family_friendly": "False",
             "transaction_not_required": "False",
         }
-        response = self.client.get(reverse("naturescall:filter_restroom"), data=data)
+        response = self.client.get(reverse("naturescall:search_restroom"), data=data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["data"]), 1)
         self.assertEqual(len(response.context["data1"]), 18)
 
-    def test_unfiltered_from_search_restroom(self):
-        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+    def test_authenticated_user_search_restroom(self):
+        """testing search result for authenticated user"""
+        yelp_id = "FkA9aoMhWO4XKFMTuTnl4Q"
         desc = "TEST Accessibile= true"
+        user = User.objects.create_user("Howard", "howard@gmail.com")
+        self.client.force_login(user=user)
+        self.client.post(
+            reverse("accounts:profile"),
+            data={
+                "email": "Hao@gmail.com",
+                "profilename": "Howard",
+                "accessible": "True",
+                "family_friendly": "False",
+                "transaction_not_required": "False",
+            },
+        )
+
         Restroom.objects.create(yelp_id=yelp_id, description=desc, accessible="True")
-        data = {
-            "filtered": "tandon",
-            "accessible": "True",
-            "family_friendly": "False",
-            "transaction_not_required": "False",
-        }
+        data = {"searched": "washigton square park"}
         response = self.client.get(reverse("naturescall:search_restroom"), data=data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["data"]), 1)
