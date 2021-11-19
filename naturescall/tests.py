@@ -118,7 +118,8 @@ class ViewTests(TestCase):
         should return a valid webpage with 20 "Add Restroom" results
         """
         response = self.client.get(
-            reverse("naturescall:search_restroom"), data={"searched": "nyu tandon"}
+            reverse("naturescall:search_restroom"),
+            data={"searched": "washington square park"},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(str(response.content).count("Add Restroom"), 20)
@@ -132,10 +133,10 @@ class ViewTests(TestCase):
         yelp_id = "E6h-sMLmF86cuituw5zYxw"
         create_restroom(yelp_id, desc)
         response = self.client.get(
-            reverse("naturescall:search_restroom"), data={"searched": "nyu tandon"}
+            reverse("naturescall:search_restroom"), data={"searched": "tandon"}
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(str(response.content).count("Add Restroom"), 19)
+        self.assertEqual(str(response.content).count("Add Restroom"), 18)
 
     def test_get_request_add_restroom_not_logged_in(self):
         """
@@ -355,7 +356,7 @@ class ViewTests(TestCase):
         desc = "TEST Accessibile= true"
         Restroom.objects.create(yelp_id=yelp_id, description=desc, accessible="True")
         data = {
-            "filtered": "Tandon",
+            "filtered": "tandon",
             "accessible": "True",
             "family_friendly": "False",
             "transaction_not_required": "False",
@@ -363,14 +364,14 @@ class ViewTests(TestCase):
         response = self.client.get(reverse("naturescall:filter_restroom"), data=data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["data"]), 1)
-        self.assertEqual(len(response.context["data1"]), 19)
+        self.assertEqual(len(response.context["data1"]), 18)
 
     def test_unfiltered_from_search_restroom(self):
         yelp_id = "E6h-sMLmF86cuituw5zYxw"
         desc = "TEST Accessibile= true"
         Restroom.objects.create(yelp_id=yelp_id, description=desc, accessible="True")
         data = {
-            "filtered": "Tandon",
+            "filtered": "tandon",
             "accessible": "True",
             "family_friendly": "False",
             "transaction_not_required": "False",
@@ -378,7 +379,7 @@ class ViewTests(TestCase):
         response = self.client.get(reverse("naturescall:search_restroom"), data=data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["data"]), 1)
-        self.assertEqual(len(response.context["data1"]), 19)
+        self.assertEqual(len(response.context["data1"]), 18)
 
     def test_newly_created_restroom_with_no_rating(self):
         """
