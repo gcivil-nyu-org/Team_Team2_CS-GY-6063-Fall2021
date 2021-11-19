@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.messages import get_messages
-from .models import Restroom, Rating
+from .models import Restroom, Rating, ClaimedRestroom
 from .filters import RestroomFilter
 import os
 
@@ -119,7 +119,7 @@ class ViewTests(TestCase):
         """
         response = self.client.get(
             reverse("naturescall:search_restroom"),
-            data={"searched": "washigton square park"},
+            data={"searched": "washington square park"},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(str(response.content).count("Add Restroom"), 20)
@@ -417,3 +417,115 @@ class ViewTests(TestCase):
             comment="comment2",
         )
         self.assertEqual(len(Rating.objects.filter(restroom_id=new_restroom.pk)), 2)
+
+    def test_see_claim_button_unclaimed_restroom(self):
+        """
+        A get request to the restroom_detail page should yield a
+        valid response containing "Claim This Restroom!"
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        create_restroom(yelp_id, desc)
+        response = self.client.get(reverse("naturescall:restroom_detail", args=(1,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Claim This Restroom!")
+
+    def test_see_claim_button_unverified_restroom_claimed_by_self(self):
+        """
+        A get request to the restroom_detail page should yield a
+        valid response but not "Claim This Restroom!" since this user has
+        already put in a claim
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        ClaimedRestroom.objects.create(restroom_id=rr, user_id=user)
+        response = self.client.get(reverse("naturescall:restroom_detail", args=(1,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Claim This Restroom!")
+
+    def test_see_claim_button_unverified_restroom_claimed_by_other(self):
+        """
+        A get request to the restroom_detail page should yield a
+        valid response and "Claim This Restroom!" since some user has
+        already put in an unverified claim
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        ClaimedRestroom.objects.create(restroom_id=rr, user_id=user)
+        user1 = User.objects.create_user("Jon1", "jon1@email.com")
+        self.client.force_login(user=user1)
+        response = self.client.get(reverse("naturescall:restroom_detail", args=(1,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Claim This Restroom!")
+
+    def test_see_claim_button_verified_restroom_claimed_by_other(self):
+        """
+        A get request to the restroom_detail page should yield a
+        valid response but not "Claim This Restroom!" since some user has
+        already put in a verified claim
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+        user1 = User.objects.create_user("Jon1", "jon1@email.com")
+        self.client.force_login(user=user1)
+        response = self.client.get(reverse("naturescall:restroom_detail", args=(1,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Claim This Restroom!")
+
+    def test_enter_claim_get(self):
+        """
+        A get request to the claim_restroom page should yield a
+        valid response
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        create_restroom(yelp_id, desc)
+        response = self.client.get(reverse("naturescall:claim_restroom", args=(1,)))
+        self.assertEqual(response.status_code, 200)
+
+    def test_enter_claim_post(self):
+        """
+        A post request to the claim_restroom page should yield a
+        redirect response
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        response = self.client.post(
+            reverse("naturescall:claim_restroom", args=(1,)),
+            data={
+                "restroom_id": rr,
+                "user_id": user,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+
+    def test_enter_claim_get_restroom_already_claimed(self):
+        """
+        A get request to the claim_restroom page should yield a
+        404 response if the restroom has already been claimed
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+        response = self.client.get(reverse("naturescall:claim_restroom", args=(1,)))
+        self.assertEqual(response.status_code, 404)

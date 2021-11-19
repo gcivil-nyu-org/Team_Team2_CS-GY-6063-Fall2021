@@ -10,7 +10,7 @@
 	<body>
 		<nav class = "navbar navbar-expand-lg navbar-dark bg-dark">
 			{% block home %}
-			<a class="navbar-brand" href="{% url 'naturescall:index' %}">Naturescall</a>
+			<a class="navbar-brand" href="{% url 'naturescall:index' %}">Nature's Call</a>
 			{% endblock %}
 		</nav>
 		<div class="container">
@@ -26,6 +26,25 @@
 			</form>
 			{% endblock %}
 		</div>
+        {% if claims %}
+            <div class="container">
+			<div class="accordion" id="accordion1">
+				<br>
+				<h3>My Restrooms</h3>
+					{% for claim in claims %}
+					<div class="card">
+						<div class="card-header" id="heading-{{claim.pk}}">
+							<h2 class="mb-0">
+								<button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse-{{claim.pk}}" aria-expanded="true" aria-controls="collapse-{{claim.pk}}">
+									<a href="{% url 'naturescall:manage_restroom' claim.restroom_id_id %}"> {{claim.restroom_id}} </a>
+								</button>
+							</h2>
+						</div>
+					</div>
+					{% endfor %}
+			</div>
+		</div>
+        {% endif %}
 		<div class="container">
 			<div class="accordion" id="accordionExample">
 				<br>
