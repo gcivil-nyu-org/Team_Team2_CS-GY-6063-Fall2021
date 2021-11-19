@@ -137,7 +137,7 @@ class ViewTests(TestCase):
             data={"searched": "washigton square park"},
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(str(response.content).count("Add Restroom"), 18)
+        self.assertEqual(str(response.content).count("Add Restroom"), 19)
 
     def test_get_request_add_restroom_not_logged_in(self):
         """
@@ -356,7 +356,7 @@ class ViewTests(TestCase):
         response = self.client.get(reverse("naturescall:search_restroom"), data=data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["data"]), 1)
-        self.assertEqual(len(response.context["data1"]), 18)
+        self.assertEqual(len(response.context["data1"]), 19)
 
     def test_authenticated_user_search_restroom(self):
         """testing search result for authenticated user"""
@@ -380,7 +380,7 @@ class ViewTests(TestCase):
         response = self.client.get(reverse("naturescall:search_restroom"), data=data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["data"]), 1)
-        self.assertEqual(len(response.context["data1"]), 18)
+        self.assertEqual(len(response.context["data1"]), 19)
 
     def test_newly_created_restroom_with_no_rating(self):
         """
