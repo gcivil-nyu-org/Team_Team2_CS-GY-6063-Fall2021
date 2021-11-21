@@ -386,11 +386,19 @@ def delete_rating(request, r_id):
     return HttpResponseRedirect(reverse("naturescall:index"))
 
 
-# The page for adding new restroom to our database
+# The page for adding / updating restroom
 @login_required(login_url="login")
 def add_restroom(request, yelp_id):
     # check to see if restaurant already exists in database
     current_restroom_set = Restroom.objects.filter(yelp_id=yelp_id)
+    # make sure if this is a modification that the restroom is claimed and the user is the owner
+    if current_restroom_set:
+        current_user = request.user
+        valid_claim = ClaimedRestroom.objects.filter(
+            restroom_id=current_restroom_set[0], user_id=current_user, verified=True
+        )
+        if not valid_claim:
+            raise Http404("Access Denied")
     if request.method == "POST":
         form = AddRestroom(request.POST)
         if form.is_valid():
