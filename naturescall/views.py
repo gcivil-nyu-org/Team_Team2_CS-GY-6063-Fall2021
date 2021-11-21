@@ -391,7 +391,8 @@ def delete_rating(request, r_id):
 def add_restroom(request, yelp_id):
     # check to see if restaurant already exists in database
     current_restroom_set = Restroom.objects.filter(yelp_id=yelp_id)
-    # make sure if this is a modification that the restroom is claimed and the user is the owner
+    # make sure if this is a modification that the restroom
+    # is claimed and the user is the owner
     if current_restroom_set:
         current_user = request.user
         valid_claim = ClaimedRestroom.objects.filter(
