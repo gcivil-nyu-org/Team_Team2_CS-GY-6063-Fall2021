@@ -9,17 +9,18 @@
 	</head>
 	<body>
 		<nav class = "navbar navbar-expand-lg navbar-dark bg-dark">
-			{% block home %}
-			<a class="navbar-brand" href="{% url 'naturescall:index' %}">Naturescall</a>
+			{% block home1 %}
+			<a class="navbar-brand" href="{% url 'naturescall:index' %}">Nature's Call</a>
 			{% endblock %}
 		</nav>
+		{% block content %}
 		<div class="container">
-			{% block content %}
 			<h2>User-Profile</h2>
 			<form method="POST" enctype="multipart/form-data">
 				{% csrf_token %}
 				<fieldset class="form-group">
 					{{ u_form.as_p}}
+					<h3> Preferences</h3>
 					{{ p_form.as_p}}
 				</fieldset>
 				<input class="btn btn-primary" type="submit" value="Update">
@@ -30,28 +31,27 @@
 			<div class="accordion" id="accordionExample">
 				<br>
 				<h3>Ratings and Reviews</h3>
-					{% for rating in ratings %}
-					<div class="card">
-						<div class="card-header" id="heading-{{rating.pk}}">
-							<h2 class="mb-0">
-								<button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse-{{rating.pk}}" aria-expanded="true" aria-controls="collapse-{{rating.pk}}">
-									{{rating.restroom_id}}
-								</button>
-							</h2>
-						</div>
-
-						<div id="collapse-{{rating.pk}}" class="collapse" aria-labelledby="heading-{{rating.pk}}" data-parent="#accordionExample">
-							<div class="card-body">
-								<li>Rating: {{rating.rating}}</li>
-								<li>Headline: {{rating.headline}}</li>
-								<li>Comment: {{rating.comment}}</li>
-{#								<a href="{% url 'accounts:edit_rating' rating.id %}" >Edit</a><br>#}
-								<a href="{% url 'naturescall:rate_restroom' rating.restroom_id_id %}" >Edit</a><br>
-								<a href="{% url 'naturescall:delete_rating' rating.restroom_id_id %}" >Delete</a>
-							</div>
+				{% for rating in ratings %}
+				<div class="card">
+					<div class="card-header" id="heading-{{rating.pk}}">
+						<h2 class="mb-0">
+							<button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse-{{rating.pk}}" aria-expanded="true" aria-controls="collapse-{{rating.pk}}">
+								{{rating.restroom_id}}
+							</button>
+						</h2>
+					</div>
+					<div id="collapse-{{rating.pk}}" class="collapse" aria-labelledby="heading-{{rating.pk}}" data-parent="#accordionExample">
+						<div class="card-body">
+							<li>Rating: {{rating.rating}}</li>
+							<li>Headline: {{rating.headline}}</li>
+							<li>Comment: {{rating.comment}}</li>
+							{# <a href="{% url 'accounts:edit_rating' rating.id %}" >Edit</a><br>#}
+							<a href="{% url 'naturescall:rate_restroom' rating.restroom_id_id %}" >Edit</a><br>
+							<a href="{% url 'naturescall:delete_rating' rating.restroom_id_id %}" >Delete</a>
 						</div>
 					</div>
-					{% endfor %}
+				</div>
+				{% endfor %}
 			</div>
 		</div>
 		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
