@@ -481,6 +481,21 @@ def restroom_detail(request, r_id):
     }
     return render(request, "naturescall/restroom_detail.html", context)
 
+@login_required(login_url="login")
+def get_qr(request, r_id):
+    querySet = Restroom.objects.filter(id=r_id)
+    res_title = querySet.values()[0]["title"]
+    url_string = "http://127.0.0.1:8000/qr_confirm/" + str(r_id) +'/' + str(request.user.id)
+    context = {"title": res_title, "url" : url_string}
+    return render(request, "naturescall/QR_code.html", context)
+
+@login_required(login_url="login")
+def qr_confirm(request, r_id, u_id):
+    res_querySet = Restroom.objects.filter(id=r_id)
+    res_title = res_querySet.values()[0]["title"]
+    context = {"title": res_title}
+    return render(request, "naturescall/qr_confirm.html", context)
+
 
 def claim_restroom(request, r_id):
     """claim a restroom"""

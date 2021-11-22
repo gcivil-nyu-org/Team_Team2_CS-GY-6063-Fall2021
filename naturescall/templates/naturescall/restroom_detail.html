@@ -55,6 +55,7 @@
                 {% if show_claim %}
                     <a href="{% url 'naturescall:claim_restroom' res.yelp_data.db_id %}" class="btn btn-primary">Claim This Restroom!</a>
                 {% endif %}
+                <a href="{% url 'naturescall:get_qr' res.yelp_data.db_id %}" class="btn btn-success">QR_code!</a>
             </div>
         </div>
     </div>
