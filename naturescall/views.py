@@ -34,7 +34,7 @@ def index(request):
     context = {}
     # form = LocationForm(request.POST or None)
     # context["form"] = form
-    return render(request, "naturescall/index.html", context)
+    return render(request, "naturescall/home.html", context)
 
 
 # The search page for the user to enter address, search for and

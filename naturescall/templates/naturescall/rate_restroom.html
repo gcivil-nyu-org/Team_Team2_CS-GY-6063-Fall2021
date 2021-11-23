@@ -1,11 +1,11 @@
-{% extends  "naturescall/index.html" %}
+{% extends  "naturescall/base.html" %}
 <!-- no search bar in the add_res page -->
 {% block form %}
 {% endblock %}
 
 {% block content %}
-<div class="container">
-	<h2>{{ title }}</h2>
+<div class="container" style="color: white; text-shadow: 2px 2px black; text-align: center;">
+	<h2>{{title}}</h2>
 	<form action="" method="POST">
 		{%csrf_token%}
 		{{form.as_p}}

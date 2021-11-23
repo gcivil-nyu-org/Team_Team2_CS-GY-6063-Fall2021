@@ -1,32 +1,18 @@
-{% extends "naturescall/index.html" %}
-
-{% block home %}
-<a class="navbar-brand" href="{% url 'naturescall:index' %}">Nature's Call</a>
-{% endblock %}
-{% block form %}
-<form class="form-inline my-2 my-lg-0" method="GET" action= "{% url 'naturescall:search_restroom' %}">
-	{% csrf_token %}
-<input class="form-control mr-sm-2" type="search" placeholder="Search Location" name = "searched" required="required">
-<button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-</form>
-{% endblock %}
+{% extends "naturescall/base.html" %}
 
 {% block content %}
 <div class="container-fluid">
 	<div class= "row">
 		<div class="col-md-6">
 			<p>
-			<a class="btn btn-primary" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">Select filters</a>
+			<a class="btn btn-primary" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">Filters</a>
 			</p>
 			<div class="collapse" id="collapseExample">
 				<div class="card card-body">
 					<form class="form-inline my-2 my-lg-0" method="GET">
 						{% csrf_token %}
-				<!--		<fieldset class="form-group">
-				<input class="form-control mr-sm-2" type="search" placeholder="Search Location" name = "filtered" required="required"> -->
-							{{tableFilter.form.as_p}}
-							<!--		</fieldset> -->
-						<button href="{% url 'naturescall:search_restroom'%}" class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+						{{tableFilter.form.as_p}}
+						<button href="{% url 'naturescall:search_restroom'%}" class="btn btn-outline-success my-2 my-sm-0 ml-auto" type="submit">Search</button>
 					</form>
 				</div>
 			</div>
@@ -39,7 +25,6 @@
 					<p class="card-text">{{d.addr}}</p>
 					<p class="card-text" style="color:DodgerBlue;">{{d.distance}} meters away</p>
 					{% if d.db_id %}
-					<!--<p class="card-text">our rating: {{d.our_rating}}</p>-->
 					<a href="{% url 'naturescall:restroom_detail' d.db_id %}" class="btn btn-success">Show Details</a>
 					{% else %}
 					<a href="{% url 'naturescall:add_restroom' d.id %}" class="btn btn-info">Add Restroom</a>
