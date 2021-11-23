@@ -386,29 +386,51 @@ def delete_rating(request, r_id):
     return HttpResponseRedirect(reverse("naturescall:index"))
 
 
-# The page for adding new restroom to our database
+# The page for adding / updating restroom
 @login_required(login_url="login")
-def add_restroom(request, r_id):
+def add_restroom(request, yelp_id):
+    # check to see if restaurant already exists in database
+    current_restroom_set = Restroom.objects.filter(yelp_id=yelp_id)
+    # make sure if this is a modification that the restroom
+    # is claimed and the user is the owner
+    if current_restroom_set:
+        current_user = request.user
+        valid_claim = ClaimedRestroom.objects.filter(
+            restroom_id=current_restroom_set[0], user_id=current_user, verified=True
+        )
+        if not valid_claim:
+            raise Http404("Access Denied")
     if request.method == "POST":
-        f = AddRestroom(request.POST)
-        if f.is_valid():
-            post = f.save(commit=False)
-            post.save()
+        form = AddRestroom(request.POST)
+        if form.is_valid():
+            entry = form.save(commit=False)
+            if current_restroom_set:
+                entry.id = current_restroom_set[0].id
+                entry.save()
+                return redirect(
+                    "naturescall:manage_restroom", r_id=current_restroom_set[0].id
+                )
+            entry.save()
             return HttpResponseRedirect(reverse("naturescall:index"))
         else:
-            return render(request, "naturescall/add_restroom.html", {"form": f})
+            return render(request, "naturescall/add_restroom.html", {"form": form})
     else:
-        k = get_business(api_key, r_id)
-        if k.get("error"):
-            raise Http404("Restroom does not exist")
-        context = {}
-        name = k["name"]
-        title = (
-            k["name"] + " " + k["location"]["address1"] + " " + k["location"]["city"]
-        )
-        form = AddRestroom(initial={"yelp_id": r_id, "title": title})
-        context["form"] = form
-        context["name"] = name
+        if not current_restroom_set:
+            k = get_business(api_key, yelp_id)
+            if k.get("error"):
+                raise Http404("Restroom does not exist")
+            title = (
+                k["name"]
+                + " "
+                + k["location"]["address1"]
+                + " "
+                + k["location"]["city"]
+            )
+            form = AddRestroom(initial={"yelp_id": yelp_id, "title": title})
+        else:
+            form = AddRestroom(instance=current_restroom_set[0])
+            title = current_restroom_set[0].title
+        context = {"form": form, "title": title}
         return render(request, "naturescall/add_restroom.html", context)
 
 
@@ -462,13 +484,13 @@ def restroom_detail(request, r_id):
 
 def claim_restroom(request, r_id):
     """claim a restroom"""
-    current_user = request.user
     current_restroom = get_object_or_404(Restroom, id=r_id)
     current_claims = ClaimedRestroom.objects.filter(
         restroom_id=current_restroom, verified=True
     )
     if current_claims:
-        raise Http404("Restroom has already been claimed")
+        raise Http404("Access Denied")
+    current_user = request.user
     if request.method == "POST":
         form = ClaimRestroom(request.POST)
         if form.is_valid():
@@ -481,6 +503,24 @@ def claim_restroom(request, r_id):
         form = ClaimRestroom()
     context = {"form": form, "title": current_restroom.title}
     return render(request, "naturescall/claim_restroom.html", context)
+
+
+def manage_restroom(request, r_id):
+    """manage a restroom"""
+    current_restroom = get_object_or_404(Restroom, id=r_id)
+    current_user = request.user
+    valid_claim = ClaimedRestroom.objects.filter(
+        restroom_id=current_restroom, user_id=current_user, verified=True
+    )
+    if not valid_claim:
+        raise Http404("Access Denied")
+    form = AddRestroom(instance=current_restroom)
+    context = {
+        "title": current_restroom.title,
+        "yelp_id": current_restroom.yelp_id,
+        "form": form,
+    }
+    return render(request, "naturescall/manage_restroom.html", context)
 
 
 # Helper function: make an API request

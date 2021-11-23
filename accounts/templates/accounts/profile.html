@@ -9,7 +9,7 @@
 	</head>
 	<body>
 		<nav class = "navbar navbar-expand-lg navbar-dark bg-dark">
-			{% block home1 %}
+			{% block home %}
 			<a class="navbar-brand" href="{% url 'naturescall:index' %}">Nature's Call</a>
 			{% endblock %}
 		</nav>
@@ -20,13 +20,31 @@
 				{% csrf_token %}
 				<fieldset class="form-group">
 					{{ u_form.as_p}}
-					<h3> Preferences</h3>
 					{{ p_form.as_p}}
 				</fieldset>
 				<input class="btn btn-primary" type="submit" value="Update">
 			</form>
 			{% endblock %}
 		</div>
+		{% if claims %}
+		<div class="container">
+			<div class="accordion" id="accordion1">
+				<br>
+				<h3>My Restrooms</h3>
+				{% for claim in claims %}
+				<div class="card">
+					<div class="card-header" id="heading-{{claim.pk}}">
+						<h2 class="mb-0">
+							<button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse-{{claim.pk}}" aria-expanded="true" aria-controls="collapse-{{claim.pk}}">
+								<a href="{% url 'naturescall:manage_restroom' claim.restroom_id_id %}"> {{claim.restroom_id}} </a>
+							</button>
+						</h2>
+					</div>
+				</div>
+				{% endfor %}
+			</div>
+		</div>
+		{% endif %}
 		<div class="container">
 			<div class="accordion" id="accordionExample">
 				<br>
@@ -45,14 +63,13 @@
 							<li>Rating: {{rating.rating}}</li>
 							<li>Headline: {{rating.headline}}</li>
 							<li>Comment: {{rating.comment}}</li>
-							{# <a href="{% url 'accounts:edit_rating' rating.id %}" >Edit</a><br>#}
 							<a href="{% url 'naturescall:rate_restroom' rating.restroom_id_id %}" >Edit</a><br>
 							<a href="{% url 'naturescall:delete_rating' rating.restroom_id_id %}" >Delete</a>
 						</div>
 					</div>
 				</div>
-				{% endfor %}
 			</div>
+			{% endfor %}
 		</div>
 		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>

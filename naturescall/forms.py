@@ -12,8 +12,9 @@ class LocationForm(forms.Form):
 class AddRestroom(forms.ModelForm):
     title = forms.CharField(
         disabled=False,
-        label="Restroom",
-        widget=forms.TextInput(attrs={"size": 80, "readonly": True}),
+        # label="Restroom",
+        # widget=forms.TextInput(attrs={"size": 80, "readonly": True}),
+        widget=forms.HiddenInput(),
     )
     yelp_id = forms.SlugField(disabled=False, widget=forms.HiddenInput())
     description = forms.CharField(widget=forms.TextInput(attrs={"size": 80}))
