@@ -206,6 +206,7 @@ class ViewTests(TestCase):
         create_restroom(yelp_id, desc)
         user = User.objects.create_user("Jon", "jon@email.com")
         self.client.force_login(user=user)
+        self.client.get(reverse("naturescall:rate_restroom", args=(1,)))
         response = self.client.post(
             reverse("naturescall:rate_restroom", args=(1,)),
             data={
@@ -255,6 +256,10 @@ class ViewTests(TestCase):
             rating="4",
             headline="headline1",
             comment="comment1",
+        )
+        self.client.get(
+            reverse("naturescall:rate_restroom", args=(1,)),
+            HTTP_REFERER="http://localhost:8000/accounts/profile",
         )
         response = self.client.post(
             reverse("naturescall:rate_restroom", args=(1,)),
