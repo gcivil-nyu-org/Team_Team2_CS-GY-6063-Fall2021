@@ -22,8 +22,12 @@ urlpatterns = [
     path("", include("naturescall.urls", namespace="naturescall")),
     path("admin/", admin.site.urls),
     path("accounts/", include("accounts.urls", namespace="accounts")),
-    path("accounts/password_reset/",
-        auth_views.PasswordResetView.as_view(form_class=EmailValidationOnForgotPassword),
-        name="password_reset"),
+    path(
+        "accounts/password_reset/",
+        auth_views.PasswordResetView.as_view(
+            form_class=EmailValidationOnForgotPassword
+        ),
+        name="password_reset",
+    ),
     path("accounts/", include("django.contrib.auth.urls")),
 ]
