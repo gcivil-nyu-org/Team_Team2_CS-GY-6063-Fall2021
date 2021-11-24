@@ -11,7 +11,8 @@ class Restroom(models.Model):
     # https://github.com/Yelp/yelp-fusion/issues/183
     yelp_id = models.CharField(max_length=100)
     description = models.TextField(blank=False, null=False)
-    last_modified = models.DateTimeField(auto_now_add=True)
+    # last_modified = models.DateTimeField(auto_now_add=True)
+    last_modified = models.DateTimeField(auto_now=True)
     accessible = models.BooleanField(default=False)
     family_friendly = models.BooleanField(default=False)
     transaction_not_required = models.BooleanField(default=False)
@@ -44,3 +45,18 @@ class ClaimedRestroom(models.Model):
 
     def __str__(self):
         return f"{Restroom.objects.get(id=self.restroom_id_id).title[:50]}..."
+
+
+class Coupon(models.Model):
+    """Class to hold coupons for claimed restrooms"""
+
+    cr_id = models.ForeignKey(ClaimedRestroom, on_delete=models.CASCADE)
+    description = models.TextField(blank=False, null=False)
+
+
+class Transaction(models.Model):
+    """Class to hold transactions"""
+
+    coupon_id = models.ForeignKey(Coupon, on_delete=models.RESTRICT)
+    user_id = models.ForeignKey(User, on_delete=models.RESTRICT)
+    timestamp = models.DateTimeField(auto_now_add=True)

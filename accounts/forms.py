@@ -3,6 +3,19 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .models import Profile
 from naturescall.models import Rating
+from django.contrib.auth.forms import PasswordResetForm
+from django.core.exceptions import ValidationError
+
+
+class EmailValidationOnForgotPassword(PasswordResetForm):
+    def clean_email(self):
+        email = self.cleaned_data["email"]
+        print(email)
+        if not User.objects.filter(email__iexact=email, is_active=True).exists():
+            raise ValidationError(
+                "There is no user registered with the specified E-Mail address."
+            )
+            return email
 
 
 class SignupForm(UserCreationForm):
@@ -24,7 +37,6 @@ class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = [
-            "profilename",
             "accessible",
             "family_friendly",
             "transaction_not_required",
@@ -32,9 +44,14 @@ class ProfileUpdateForm(forms.ModelForm):
 
 
 class UserUpdateForm(forms.ModelForm):
+    email = forms.CharField(disabled=True)
+
     class Meta:
         model = User
-        fields = ["email"]
+        fields = [
+            "username",
+            "email",
+        ]
 
 
 class EditRating(forms.ModelForm):
