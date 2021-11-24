@@ -626,3 +626,35 @@ class ViewTests(TestCase):
             reverse("naturescall:manage_restroom", args=(1,)),
         )
         self.assertEqual(response.status_code, 404)
+
+    def test_comment_response_authorized(self):
+        """
+        The restroom owner should be able to see comment response page
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+        response = self.client.get(
+            reverse("naturescall:comment_response", args=(1,)),
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_comment_response_unauthorized(self):
+        """
+        An unauthorized user should not be able to see comment response page
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+        user1 = User.objects.create_user("Jon1", "jon1@email.com")
+        self.client.force_login(user=user1)
+        response = self.client.get(
+            reverse("naturescall:comment_response", args=(1,)),
+        )
+        self.assertEqual(response.status_code, 404)

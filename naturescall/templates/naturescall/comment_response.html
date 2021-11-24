@@ -1,0 +1,10 @@
+<h1>Placeholder for Comment Response Functionality</h1>
+<h2>Comments</h2>
+{% for rating in ratings %}
+    <h4>{{rating.user_id}}</h4>
+    Rating: {{rating.rating}}<br>
+    Headline: {{rating.headline}}<br>
+    Comment: {{rating.comment}}<br>
+    Response: <a href="{% url 'naturescall:rate_restroom' r_id %}">Respond to Comment</a>
+    <br>
+{% endfor %}
