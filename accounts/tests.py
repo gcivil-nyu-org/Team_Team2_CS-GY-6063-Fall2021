@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.messages import get_messages
 from .models import Profile
-from naturescall.models import Rating, Restroom
+from naturescall.models import Rating, Restroom, ClaimedRestroom
 
 # Create your tests here.
 
@@ -120,6 +120,22 @@ class ProfileTests(TestCase):
             headline="headline1",
             comment="comment1",
         )
+        response = self.client.get(reverse("accounts:profile"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, title)
+
+    def test_profile_shows_claimed_restroom(self):
+        """
+        A user goes to the profile page and is able to see profile
+        and claim information, including the titles of claimed restrooms
+        """
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        title = rr.title
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
         response = self.client.get(reverse("accounts:profile"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, title)
