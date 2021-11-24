@@ -210,8 +210,12 @@ def rate_restroom(request, r_id):
             entry.save()
             msg = "Congratulations, Your rating has been saved!"
             messages.success(request, f"{msg}")
-            return redirect("naturescall:restroom_detail", r_id=current_restroom.id)
+            if request.session["referer"] and "profile" in request.session["referer"]:
+                return redirect("accounts:profile")
+            else:
+                return redirect("naturescall:restroom_detail", r_id=current_restroom.id)
     else:
+        request.session["referer"] = request.headers.get("Referer")
         if rating_set:
             form = AddRating(instance=rating_set[0])
         else:
@@ -314,7 +318,10 @@ def restroom_detail(request, r_id):
     res["desc"] = current_restroom.description
 
     # determine if claim button should be shown
-    show_claim = True
+    # should not be shown to an unauthenticated user
+    show_claim = current_user.is_authenticated
+    # should not be shown if any user has a verified claim
+    # should not be shown if this user has a previous unverified claim
     all_claims = ClaimedRestroom.objects.filter(restroom_id=current_restroom)
     for claim in all_claims:
         if claim.verified or claim.user_id == current_user:
@@ -330,6 +337,7 @@ def restroom_detail(request, r_id):
     return render(request, "naturescall/restroom_detail.html", context)
 
 
+@login_required
 def claim_restroom(request, r_id):
     """claim a restroom"""
     current_restroom = get_object_or_404(Restroom, id=r_id)
@@ -353,6 +361,7 @@ def claim_restroom(request, r_id):
     return render(request, "naturescall/claim_restroom.html", context)
 
 
+@login_required
 def manage_restroom(request, r_id):
     """manage a restroom"""
     current_restroom = get_object_or_404(Restroom, id=r_id)
@@ -362,13 +371,33 @@ def manage_restroom(request, r_id):
     )
     if not valid_claim:
         raise Http404("Access Denied")
-    form = AddRestroom(instance=current_restroom)
     context = {
         "title": current_restroom.title,
         "yelp_id": current_restroom.yelp_id,
-        "form": form,
+        "r_id": current_restroom.id,
     }
     return render(request, "naturescall/manage_restroom.html", context)
+
+
+@login_required
+def comment_response(request, r_id):
+    """manage a restroom"""
+    current_restroom = get_object_or_404(Restroom, id=r_id)
+    current_user = request.user
+    valid_claim = ClaimedRestroom.objects.filter(
+        restroom_id=current_restroom, user_id=current_user, verified=True
+    )
+    if not valid_claim:
+        raise Http404("Access Denied")
+    all_ratings = Rating.objects.filter(restroom_id=current_restroom)
+    all_comments = [rating.comment for rating in all_ratings]
+    context = {
+        "title": current_restroom.title,
+        "r_id": r_id,
+        "comments": all_comments,
+        "ratings": all_ratings,
+    }
+    return render(request, "naturescall/comment_response.html", context)
 
 
 # Helper function: make an API request
