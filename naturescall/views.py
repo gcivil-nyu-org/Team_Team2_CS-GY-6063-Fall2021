@@ -348,6 +348,8 @@ def search_restroom(request):
 @login_required(login_url="login")
 def rate_restroom(request, r_id):
     """Rate a restroom"""
+    if "Referer" in request.headers and "profile" in request.headers["Referer"]:
+        print("From account/profile")
     current_restroom = get_object_or_404(Restroom, id=r_id)
     current_user = request.user
     rating_set = Rating.objects.filter(restroom_id=r_id, user_id=current_user)
@@ -481,7 +483,7 @@ def restroom_detail(request, r_id):
     }
     return render(request, "naturescall/restroom_detail.html", context)
 
-
+@login_required
 def claim_restroom(request, r_id):
     """claim a restroom"""
     current_restroom = get_object_or_404(Restroom, id=r_id)
