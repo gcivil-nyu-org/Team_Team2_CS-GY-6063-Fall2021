@@ -78,17 +78,18 @@ def view_profile(request):
         u_form = UserUpdateForm(request.POST, instance=request.user)
         p_form = ProfileUpdateForm(request.POST, instance=request.user.profile)
         if u_form.is_valid() and p_form.is_valid():
+            request.user.profile.profilename = request.POST["username"]
             u_form.save()
             p_form.save()
             msg = "Your account has been updated!"
             messages.success(request, f"{msg}")
             return HttpResponseRedirect(reverse("naturescall:index"))
     else:
-        u_form = UserUpdateForm(instance=request.user)
-        p_form = ProfileUpdateForm(
-            instance=request.user.profile,
-            initial={"profilename": request.user.username},
+        u_form = UserUpdateForm(
+            instance=request.user,
+            initial={"username": request.user.username},
         )
+        p_form = ProfileUpdateForm(instance=request.user.profile)
     current_user = request.user
     ratings = Rating.objects.filter(user_id=current_user)
     claims = ClaimedRestroom.objects.filter(user_id=current_user, verified=True)

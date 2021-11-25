@@ -6,9 +6,9 @@ from django.contrib.auth.models import User
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profilename = models.CharField(default="naturescall member", max_length=50)
-    accessible = models.BooleanField(default=False)
-    family_friendly = models.BooleanField(default=False)
-    transaction_not_required = models.BooleanField(default=False)
+    accessible = models.BooleanField(null=True)
+    family_friendly = models.BooleanField(null=True)
+    transaction_not_required = models.BooleanField(null=True)
 
     def __str__(self):
         return f"{self.user.username} Profile"

@@ -87,15 +87,15 @@ class ProfileTests(TestCase):
         response = self.client.post(
             reverse("accounts:profile"),
             data={
-                "email": "Hao@gmail.com",
-                "profilename": "Howard",
+                "username": "How@12",
                 "accessible": "True",
                 "family_friendly": "False",
                 "transaction_not_required": "False",
             },
         )
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(User.objects.all()[0].email, "Hao@gmail.com")
+        self.assertEqual(User.objects.all()[0].username, "How@12")
+        self.assertEqual(Profile.objects.all()[0].profilename, "How@12")
         self.assertEqual(Profile.objects.all()[0].accessible, True)
         self.assertEqual(Profile.objects.all()[0].family_friendly, False)
         self.assertEqual(Profile.objects.all()[0].transaction_not_required, False)
