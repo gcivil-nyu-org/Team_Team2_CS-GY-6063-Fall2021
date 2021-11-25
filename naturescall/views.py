@@ -74,7 +74,6 @@ def search_restroom(request):
                         loc, loc1, width=800, height=740, center=location, key=map
                     )
                 )
-            print(url)
             context["location"] = location
             context["data"] = data
             context["tableFilter"] = tableFilter
