@@ -428,9 +428,10 @@ def google_url(loc, loc1, width, height, center, key, maptype="roadmap"):
     for loc2 in loc:
         obj = style_marker(loc2, style_options={"color": "green", "label":"R"})
         markers_objects.append(obj)
-    for l1 in loc1:
-        obj = style_marker(l1, style_options={"color": "orange", "label": "F"})
-        markers_objects.append(obj)
+    if loc1:
+        for l1 in loc1:
+            obj = style_marker(l1, style_options={"color": "orange", "label": "F"})
+            markers_objects.append(obj)
     mapopts = {
         "center": center,
         "size": size_str,
