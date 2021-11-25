@@ -73,6 +73,7 @@ def search_restroom(request):
                         loc, loc1, width=800, height=740, center=location, key=map
                     )
                 )
+            print(url)
             context["location"] = location
             context["data"] = data
             context["tableFilter"] = tableFilter
@@ -575,14 +576,14 @@ def google_url(loc, loc1, width, height, center, key, maptype="roadmap"):
     gmap_url = "https://maps.googleapis.com/maps/api/staticmap"
     size_str = str(width) + "x" + str(height)
     markers_objects = []
-    obj = style_marker(center, style_options={"color": "red", "label": "S"})
+    obj = style_marker(center, style_options={"color": "red", "label":"S"})
     markers_objects.append(obj)
     for loc2 in loc:
-        obj = style_marker(loc2, style_options={"color": "green", "label": "R"})
+        obj = style_marker(loc2, style_options={"color": "green", "label":"R"})
         markers_objects.append(obj)
     if loc1:
         for l1 in loc1:
-            obj = style_marker(l1, style_options={"color": "orange", "label": "F"})
+            obj = style_marker(l1, style_options={"color": "orange", "label":"F"})
             markers_objects.append(obj)
     mapopts = {
         "center": center,

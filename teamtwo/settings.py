@@ -125,7 +125,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_URL = "/static/"
+STATIC_URL = "naturescall/static/"
 LOGIN_REDIRECT_URL = "naturescall:index"
 LOGOUT_REDIRECT_URL = "naturescall:index"
 LOGIN_URL = "/naturescall/accounts/login"

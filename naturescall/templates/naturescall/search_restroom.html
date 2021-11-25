@@ -10,7 +10,7 @@
 <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
 </form>
 {% endblock %}
-
+<style>
 {% block content %}
 <div class="container-fluid">
 	<div class= "row">
@@ -52,7 +52,9 @@
 			{% endif %}
 		</div>
 		<div class="col-lg-6">
-			<img src={{map}}>
+			{% load static %}
+			<img src="{% static 'naturescall/legend1.jpg' %}" class="legend">
+			<img src={{map}} class="image">
 		</div>
 	</div>
 </div>
