@@ -15,7 +15,14 @@ urlpatterns = [
     path("claim_restroom/<int:r_id>", views.claim_restroom, name="claim_restroom"),
     path("manage_restroom/<int:r_id>", views.manage_restroom, name="manage_restroom"),
     path(
-        "comment_response/<int:r_id>", views.comment_response, name="comment_response"
+        "comment_responses/<int:r_id>",
+        views.comment_responses,
+        name="comment_responses",
+    ),
+    path(
+        "comment_response/<int:rating_id>",
+        views.comment_response,
+        name="comment_response",
     ),
 ]
 # urlpatterns += [
