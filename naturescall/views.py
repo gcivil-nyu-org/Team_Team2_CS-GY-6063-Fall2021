@@ -503,7 +503,9 @@ def get_qr(request, c_id):
     r_id = restroom.id
     querySet = Restroom.objects.filter(id=r_id)
     res_title = querySet.values()[0]["title"]
-    url_string = "http://127.0.0.1:8000/qr_confirm/" + str(c_id) +'/' + str(request.user.id)
+    #url_string = "http://127.0.0.1:8000/qr_confirm/" + str(c_id) +'/' + str(request.user.id)
+    #url_string = request.build_absolute_uri() + "/qr_confirm/" + str(c_id) +'/' + str(request.user.id)
+    url_string = request.build_absolute_uri("/qr_confirm/") + str(c_id) +'/' + str(request.user.id)
     context = {"title": res_title, "url" : url_string}
     return render(request, "naturescall/QR_code.html", context)
 
