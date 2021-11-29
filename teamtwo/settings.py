@@ -15,11 +15,9 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()  # load the configs from .env
+load_dotenv(override=True)  # load the configs from .env
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
@@ -138,8 +136,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_USE_TLS = True
 EMAIL_HOST = "smtp.gmail.com"
-EMAIL_HOST_USER = str(os.getenv("EMAIL_USER"))
-EMAIL_HOST_PASSWORD = str(os.getenv("EMAIL_PASSWORD"))
+EMAIL_HOST_USER = str(os.environ.get("EMAIL_USER"))
+EMAIL_HOST_PASSWORD = str(os.environ.get("EMAIL_PASSWORD"))
+print(EMAIL_HOST_PASSWORD)
 EMAIL_PORT = 587
 
 # Activate Django-Heroku.
