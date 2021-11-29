@@ -42,7 +42,7 @@ def index(request):
 def search_restroom(request):
     context = {}
     if request.GET.get("searched") is not None:
-        #location = request.GET["searched"]
+        # location = request.GET["searched"]
         if not request.user.is_authenticated:
             map = str(os.getenv("map"))
             location = request.GET["searched"]
@@ -423,11 +423,11 @@ def google_url(loc, loc1, width, height, center, key, maptype="roadmap"):
     gmap_url = "https://maps.googleapis.com/maps/api/staticmap"
     size_str = str(width) + "x" + str(height)
     markers_objects = []
-    center= center+"+NY"
-    obj = style_marker(center, style_options={"color": "red", "label":"S"})
+    center = center + "+NY"
+    obj = style_marker(center, style_options={"color": "red", "label": "S"})
     markers_objects.append(obj)
     for loc2 in loc:
-        obj = style_marker(loc2, style_options={"color": "green", "label":"R"})
+        obj = style_marker(loc2, style_options={"color": "green", "label": "R"})
         markers_objects.append(obj)
     if loc1:
         for l1 in loc1:
