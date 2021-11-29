@@ -1,5 +1,14 @@
 <h1>{{ title }}</h1>
 <h2>Manage This Restroom!!!</h2>
 
-<a href="{% url 'naturescall:add_restroom' yelp_id %}">Modify Description and Amenities</a>
-<h3>Respond to Comments</h3>
+<ul>
+    <li>
+        <a href="{% url 'naturescall:add_restroom' yelp_id %}">Modify Description and Amenities</a>
+    </li>
+    <li>
+        <a href="{% url 'naturescall:comment_responses' r_id %}">Respond to User Comments</a>
+    </li>
+    <li>
+        <h3>Coupons</h3>
+    </li>
+</ul>

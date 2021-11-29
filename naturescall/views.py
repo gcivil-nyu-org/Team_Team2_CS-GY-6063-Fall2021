@@ -4,7 +4,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponseRedirect, Http404
 
 # from .forms import LocationForm
-from .forms import AddRestroom, AddRating, ClaimRestroom
+from .forms import AddRestroom, AddRating, ClaimRestroom, CommentResponse
 import requests
 from django.contrib.auth.decorators import login_required
 from .filters import RestroomFilter
@@ -364,8 +364,12 @@ def rate_restroom(request, r_id):
             entry.save()
             msg = "Congratulations, Your rating has been saved!"
             messages.success(request, f"{msg}")
-            return redirect("naturescall:restroom_detail", r_id=current_restroom.id)
+            if request.session["referer"] and "profile" in request.session["referer"]:
+                return redirect("accounts:profile")
+            else:
+                return redirect("naturescall:restroom_detail", r_id=current_restroom.id)
     else:
+        request.session["referer"] = request.headers.get("Referer")
         if rating_set:
             form = AddRating(instance=rating_set[0])
         else:
@@ -468,10 +472,17 @@ def restroom_detail(request, r_id):
     res["desc"] = current_restroom.description
 
     # determine if claim button should be shown
+<<<<<<< HEAD
 
     coupon_id = -1
     show_claim = True
     has_coupon = False
+=======
+    # should not be shown to an unauthenticated user
+    show_claim = current_user.is_authenticated
+    # should not be shown if any user has a verified claim
+    # should not be shown if this user has a previous unverified claim
+>>>>>>> develop
     all_claims = ClaimedRestroom.objects.filter(restroom_id=current_restroom)
     for claim in all_claims:
         if claim.verified or claim.user_id == current_user:
@@ -523,6 +534,7 @@ def qr_confirm(request, c_id, u_id):
     return render(request, "naturescall/qr_confirm.html", context)
 
 
+@login_required
 def claim_restroom(request, r_id):
     """claim a restroom"""
     current_restroom = get_object_or_404(Restroom, id=r_id)
@@ -549,6 +561,7 @@ def claim_restroom(request, r_id):
     return render(request, "naturescall/claim_restroom.html", context)
 
 
+@login_required
 def manage_restroom(request, r_id):
     """manage a restroom"""
     current_restroom = get_object_or_404(Restroom, id=r_id)
@@ -558,13 +571,65 @@ def manage_restroom(request, r_id):
     )
     if not valid_claim:
         raise Http404("Access Denied")
-    form = AddRestroom(instance=current_restroom)
     context = {
         "title": current_restroom.title,
         "yelp_id": current_restroom.yelp_id,
-        "form": form,
+        "r_id": current_restroom.id,
     }
     return render(request, "naturescall/manage_restroom.html", context)
+
+
+@login_required
+def comment_responses(request, r_id):
+    """list all comments for a managed restroom"""
+    current_restroom = get_object_or_404(Restroom, id=r_id)
+    current_user = request.user
+    valid_claim = ClaimedRestroom.objects.filter(
+        restroom_id=current_restroom, user_id=current_user, verified=True
+    )
+    if not valid_claim:
+        raise Http404("Access Denied")
+    all_ratings = Rating.objects.filter(restroom_id=current_restroom)
+    context = {
+        "title": current_restroom.title,
+        "ratings": all_ratings,
+    }
+    return render(request, "naturescall/comment_responses.html", context)
+
+
+@login_required
+def comment_response(request, rating_id):
+    """show a single comment for a managed restroom to allow for response"""
+    current_rating = get_object_or_404(Rating, id=rating_id)
+    current_restroom = get_object_or_404(Restroom, id=current_rating.restroom_id_id)
+    current_user = request.user
+    valid_claim = ClaimedRestroom.objects.filter(
+        restroom_id=current_restroom, user_id=current_user, verified=True
+    )
+    if not valid_claim:
+        raise Http404("Access Denied")
+
+    if request.method == "POST":
+        form = CommentResponse(request.POST)
+        if form.is_valid():
+            update = form.save(commit=False)
+            update.rating = current_rating.rating
+            update.headline = current_rating.headline
+            update.comment = current_rating.comment
+            update.restroom_id = current_restroom
+            update.user_id = current_rating.user_id
+            update.id = current_rating.id
+            update.save()
+            return redirect("naturescall:comment_responses", r_id=current_restroom.id)
+    else:
+        form = CommentResponse(instance=current_rating)
+
+    context = {
+        "title": current_restroom.title,
+        "rating": current_rating,
+        "form": form,
+    }
+    return render(request, "naturescall/comment_response.html", context)
 
 
 # Helper function: make an API request

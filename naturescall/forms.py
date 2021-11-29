@@ -54,5 +54,15 @@ class AddRating(forms.ModelForm):
         ]
 
 
+class CommentResponse(forms.ModelForm):
+    response = forms.CharField(widget=forms.TextInput(attrs={"size": 80}))
+
+    class Meta:
+        model = Rating
+        fields = [
+            "response",
+        ]
+
+
 class ClaimRestroom(forms.Form):
     claim = forms.CheckboxInput()
