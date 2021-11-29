@@ -472,17 +472,16 @@ def restroom_detail(request, r_id):
     res["desc"] = current_restroom.description
 
     # determine if claim button should be shown
-<<<<<<< HEAD
-
     coupon_id = -1
     show_claim = True
     has_coupon = False
-=======
+
     # should not be shown to an unauthenticated user
-    show_claim = current_user.is_authenticated
+    if(not current_user.is_authenticated):
+        show_claim = False
     # should not be shown if any user has a verified claim
     # should not be shown if this user has a previous unverified claim
->>>>>>> develop
+
     all_claims = ClaimedRestroom.objects.filter(restroom_id=current_restroom)
     for claim in all_claims:
         if claim.verified or claim.user_id == current_user:
