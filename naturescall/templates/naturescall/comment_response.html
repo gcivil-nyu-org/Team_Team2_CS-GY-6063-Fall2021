@@ -1,10 +1,9 @@
-<h1>Placeholder for Comment Response Functionality</h1>
-<h2>Comments</h2>
-{% for rating in ratings %}
-    <h4>{{rating.user_id}}</h4>
-    Rating: {{rating.rating}}<br>
-    Headline: {{rating.headline}}<br>
-    Comment: {{rating.comment}}<br>
-    Response: <a href="{% url 'naturescall:rate_restroom' r_id %}">Respond to Comment</a>
-    <br>
-{% endfor %}
+<h1>Respond to User Comment</h1>
+Rating: {{rating.rating}}<br>
+Headline: {{rating.headline}}<br>
+Comment: {{rating.comment}}<br>
+<form action="" method="POST">
+    {%csrf_token%}
+    {{form.as_p}}
+    <input class="btn btn-primary" type= "submit" value = "Submit">
+</form>

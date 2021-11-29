@@ -33,6 +33,7 @@ class Rating(models.Model):
     )
     headline = models.TextField(max_length=65)
     comment = models.TextField(max_length=500)
+    response = models.TextField(max_length=500, blank=True)
 
 
 class ClaimedRestroom(models.Model):
