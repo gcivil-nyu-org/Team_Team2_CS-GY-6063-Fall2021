@@ -468,7 +468,7 @@ def google_url(loc, loc1, width, height, center, key, maptype="roadmap"):
     mapopts = {
         "center": center,
         "size": size_str,
-        "zoom": "16",
+        "zoom": "16.2",
         "markers": markers_objects,
         "maptype": maptype,
         "key": key,
