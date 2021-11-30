@@ -1,5 +1,11 @@
-<h1>{{ title }}</h1>
-<h2>Manage This Restroom!!!</h2>
+{% extends "naturescall/base.html" %}
 
-<a href="{% url 'naturescall:add_restroom' yelp_id %}">Modify Description and Amenities</a>
-<h3>Respond to Comments</h3>
+{% block content %}
+<div class="container ratings">
+    <h1>{{ title }}</h1>
+    <h2>Manage This Restroom!!!</h2>
+
+    <a href="{% url 'naturescall:add_restroom' yelp_id %}">Modify Description and Amenities</a>
+    <h3>Respond to Comments</h3>
+</div>
+{% endblock %}

@@ -1,5 +1,14 @@
 {% extends "naturescall/base.html" %}
 
+{% block style %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+.checked {
+    color: orange;
+}
+</style>
+{% endblock %}
+
 {% block content %}
     <div class="container-fluid">
         <img class="img-fluid" src={{res.yelp_data.image_url}} alt="Card image cap" style= "width:100%; height:15vw; object-fit: cover;">
@@ -7,26 +16,12 @@
 
     <div class="container">
         <div class="d-flex justify-content-center">
-
-            {% if messages %}
-            <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert">
-                <ul class="messages">
-                    {% for message in messages %}
-                        {{ message }}
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                        </button>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
-
             <div class="card">
                 <div class="card-body">
                     <h2 class="card-title">
                         {{res.yelp_data.name}}
                         {% if res.yelp_data.accessible %}
-                            <span class="badge badge-secondary bg-success text-white">Accessible</span>
+                            <i class="fa fa-wheelchair"></i>
                         {% endif %}
                         {% if res.yelp_data.family_friendly  %}
                             <span class="badge badge-secondary bg-primary text-white" >Family Friendly</span>
@@ -35,10 +30,23 @@
                             <span class="badge badge-secondary bg-warning text-dark">Transaction Not Required</span>
                         {% endif %}
                     </h2>
-                    <h4 class="card-text"> Address: {{res.addr}}</h4>
-                    <h4 class="card-text">Rating: {{res.yelp_data.rating}} </h4>
-                    <h4 class="card-text">Description: {{res.desc}} </h4>
-                    <a href="{% url 'naturescall:rate_restroom' res.yelp_data.db_id %}" class="btn btn-primary">Rate Now!</a>
+                    {% for star in five_stars %}
+                    {% if star >= 1.0 %}
+                    <span class="fa fa-star checked"></span>
+                    {% elif star >= 0.5 %}
+                    <span class="fa fa-star-half-full checked"></span>
+                    {% else %}
+                    <span class="fa fa-star"></span>
+                    {% endif %}
+                    {% endfor %}
+                    <h4 class="card-text">{{res.addr}}</h4>
+                    <h4 class="card-text">Description:</h4>
+                    <h4 class="card-text">{{res.desc}}</h4>
+                    {% if is_first_time_rating %}
+                        <a href="{% url 'naturescall:rate_restroom' res.yelp_data.db_id %}" class="btn btn-primary">Rate Now!</a>
+                    {% else %}
+                        <a href="{% url 'naturescall:rate_restroom' res.yelp_data.db_id %}" class="btn btn-primary">Edit Rating</a>
+                    {% endif %}
                     {% if show_claim %}
                         <a href="{% url 'naturescall:claim_restroom' res.yelp_data.db_id %}" class="btn btn-primary">Claim This Restroom!</a>
                     {% endif %}

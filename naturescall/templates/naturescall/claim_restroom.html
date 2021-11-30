@@ -1,9 +1,15 @@
-<h1>{{ title }}</h1>
-<h2>Claim This Restroom!!!</h2>
-<p>To claim this restroom, click on the "Claim" button below and email a copy
- of your license to <i>naturescall.app@gmail.com</i></p>
-<form action="" method="POST">
-	{%csrf_token%}
-	{{form.as_p}}
-	<input type= "submit" value = "Claim">
-</form>
+{% extends "naturescall/base.html" %}
+
+{% block content %}
+<div class="container ratings">
+	<h1>{{ title }}</h1>
+	<h2>Claim This Restroom!!!</h2>
+	<p>To claim this restroom, click on the "Claim" button below and email a copy
+	of your license to <i>naturescall.app@gmail.com</i></p>
+	<form action="" method="POST">
+		{%csrf_token%}
+		{{form.as_p}}
+		<input type= "submit" value = "Claim">
+	</form>
+</div>
+{% endblock %}

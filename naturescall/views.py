@@ -463,12 +463,21 @@ def restroom_detail(request, r_id):
         if claim.verified or claim.user_id == current_user:
             show_claim = False
 
+    # get the list of ratings to display in the detail page
     ratings = Rating.objects.filter(restroom_id=r_id)
+    
+    # determine if the rate button should display "Rate" or "Edit"
+    is_first_time_rating = not ratings.filter(restroom_id=r_id, user_id=current_user).exists()
+
+    rating = yelp_data["rating"]
+
     context = {
         "res": res,
         "ratings": ratings,
+        "five_stars": [rating - 0, rating - 1, rating - 2, rating - 3, rating - 4],
         "map_key": map_embedded_key,
         "show_claim": show_claim,
+        "is_first_time_rating": is_first_time_rating,
     }
     return render(request, "naturescall/restroom_detail.html", context)
 
