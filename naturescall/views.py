@@ -518,6 +518,7 @@ def get_qr(request, c_id):
     url_string = request.build_absolute_uri("/qr_confirm/") + str(c_id) +'/' + str(request.user.id)
     context = {"title": res_title, "url" : url_string}
     return render(request, "naturescall/QR_code.html", context)
+    
 
 @login_required(login_url="login")
 def qr_confirm(request, c_id, u_id):
