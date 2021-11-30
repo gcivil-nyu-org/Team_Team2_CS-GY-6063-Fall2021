@@ -23,6 +23,7 @@ import os
 from django.urls import reverse
 #import datetime
 
+
 api_key = str(os.getenv("yelp_key"))
 map_embedded_key = str(os.getenv("map_embedded"))
 
