@@ -47,15 +47,15 @@
 				</div>
 			</div>
 			{% endfor %}
-			{% else %}
-			<h3>Location Not Found</h3>
-			{% endif %}
 		</div>
 		<div class="col-lg-6">
 			<img src={{map}} class="image">
 			{% load static %}
 			<img src="{% static 'naturescall/legend1.jpg' %}" class="legend">
 		</div>
+		{% else %}
+		<h3>Location Not Found</h3>
+		{% endif %}
 	</div>
 </div>
 

@@ -42,10 +42,10 @@ def index(request):
 def search_restroom(request):
     context = {}
     if request.GET.get("searched") is not None:
-        # location = request.GET["searched"]
+        location = request.GET["searched"]
         if not request.user.is_authenticated:
             map = str(os.getenv("map"))
-            location = request.GET["searched"]
+            # location = request.GET["searched"]
             tableFilter = RestroomFilter()
             k = search(api_key, '"restroom","food","public"', location, 20)
             data = []
@@ -82,7 +82,7 @@ def search_restroom(request):
             return render(request, "naturescall/search_restroom.html", context)
         else:
             dbRestroom = Restroom.objects.all()
-            location = request.GET["searched"]
+            # location = request.GET["searched"]
             profile = request.user.profile
             d = {
                 "accessible": profile.accessible,
@@ -455,7 +455,7 @@ def google_url(loc, loc1, width, height, center, key, maptype="roadmap"):
     gmap_url = "https://maps.googleapis.com/maps/api/staticmap"
     size_str = str(width) + "x" + str(height)
     markers_objects = []
-    center = center + "+NY"
+    center = center
     obj = style_marker(center, style_options={"color": "red", "label": "S"})
     markers_objects.append(obj)
     for loc2 in loc:
