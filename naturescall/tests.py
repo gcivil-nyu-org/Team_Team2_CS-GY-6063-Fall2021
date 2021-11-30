@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.messages import get_messages
-from .models import Restroom, Rating, ClaimedRestroom
+from .models import Restroom, Rating, ClaimedRestroom, Coupon
 from .filters import RestroomFilter
 import os
 
@@ -720,3 +720,50 @@ class ViewTests(TestCase):
         response1 = self.client.get(reverse("naturescall:restroom_detail", args=(1,)))
         self.assertEqual(response.status_code, 302)
         self.assertContains(response1, owner_response)
+
+    def test_get_qr(self):
+        """
+        A user is able to get qr code for a claimed restaurant with coupon
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        cr = ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+        coupon = Coupon.objects.create(cr_id=cr, description=desc)
+        response = self.client.get(
+            reverse("naturescall:get_qr", args=(coupon.id,)),
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_confirm_qr(self):
+        """
+        A user is able to get scan the qr code for the coupon information
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        cr = ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+        coupon = Coupon.objects.create(cr_id=cr, description=desc)
+        response = self.client.get(
+            reverse("naturescall:qr_confirm", args=(coupon.id, 1)),
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_has_coupon(self):
+        """
+        Test case for which the qr code button shows in detail page
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        cr = ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+        coupon = Coupon.objects.create(cr_id=cr, description=desc)
+        response = self.client.get(reverse("naturescall:restroom_detail", args=(1,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["has_coupon"], True)
