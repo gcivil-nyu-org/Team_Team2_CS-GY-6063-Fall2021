@@ -500,6 +500,7 @@ def restroom_detail(request, r_id):
         "has_coupon": has_coupon,
         "coupon_id": coupon_id,
     }
+    #print("coupon id is: " + str(coupon_id))
     return render(request, "naturescall/restroom_detail.html", context)
 
 
@@ -568,6 +569,7 @@ def claim_restroom(request, r_id):
             claimed_restroom = ClaimedRestroom.objects.filter(
                 restroom_id=claim.restroom_id
             )[0]
+            #create a tempt coupon, just for now
             coupon = Coupon(
                 cr_id=claimed_restroom, description="This is filler description"
             )
