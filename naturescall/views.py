@@ -427,11 +427,11 @@ def add_restroom(request, yelp_id):
             if k.get("error"):
                 raise Http404("Restroom does not exist")
             title = (
-                    k["name"]
-                    + " "
-                    + k["location"]["address1"]
-                    + " "
-                    + k["location"]["city"]
+                k["name"]
+                + " "
+                + k["location"]["address1"]
+                + " "
+                + k["location"]["city"]
             )
             form = AddRestroom(initial={"yelp_id": yelp_id, "title": title})
         else:
@@ -478,7 +478,7 @@ def restroom_detail(request, r_id):
     has_coupon = False
 
     # should not be shown to an unauthenticated user
-    if (not current_user.is_authenticated):
+    if not current_user.is_authenticated:
         show_claim = False
     # should not be shown if any user has a verified claim
     # should not be shown if this user has a previous unverified claim
@@ -512,20 +512,31 @@ def hasCoupon(restroom_id):
 
 @login_required(login_url="login")
 def get_qr(request, c_id):
-    restroom = ClaimedRestroom.objects.filter(id=Coupon.objects.filter(id=c_id)[0].cr_id.id)[0].restroom_id
+    restroom = ClaimedRestroom.objects.filter(
+        id=Coupon.objects.filter(id=c_id)[0].cr_id.id
+    )[0].restroom_id
     r_id = restroom.id
     querySet = Restroom.objects.filter(id=r_id)
     res_title = querySet.values()[0]["title"]
-    # url_string = "http://127.0.0.1:8000/qr_confirm/" + str(c_id) +'/' + str(request.user.id)
-    # url_string = request.build_absolute_uri() + "/qr_confirm/" + str(c_id) +'/' + str(request.user.id)
-    url_string = request.build_absolute_uri("/qr_confirm/") + str(c_id) + '/' + str(request.user.id)
+    # url_string = "http://127.0.0.1:8000/qr_confirm/"
+    # + str(c_id) +'/' + str(request.user.id)
+    # url_string = request.build_absolute_uri() + "/qr_confirm/"
+    # + str(c_id) +'/' + str(request.user.id)
+    url_string = (
+        request.build_absolute_uri("/qr_confirm/")
+        + str(c_id)
+        + "/"
+        + str(request.user.id)
+    )
     context = {"title": res_title, "url": url_string}
     return render(request, "naturescall/QR_code.html", context)
 
 
 @login_required(login_url="login")
 def qr_confirm(request, c_id, u_id):
-    restroom = ClaimedRestroom.objects.filter(id=Coupon.objects.filter(id=c_id)[0].cr_id.id)[0].restroom_id
+    restroom = ClaimedRestroom.objects.filter(
+        id=Coupon.objects.filter(id=c_id)[0].cr_id.id
+    )[0].restroom_id
     r_id = restroom.id
     res_querySet = Restroom.objects.filter(id=r_id)
     res_title = res_querySet.values()[0]["title"]
@@ -554,8 +565,12 @@ def claim_restroom(request, r_id):
             claim.restroom_id = current_restroom
             claim.user_id = current_user
             claim.save()
-            claimed_restroom = ClaimedRestroom.objects.filter(restroom_id=claim.restroom_id)[0]
-            coupon = Coupon(cr_id=claimed_restroom, description="This is filler description")
+            claimed_restroom = ClaimedRestroom.objects.filter(
+                restroom_id=claim.restroom_id
+            )[0]
+            coupon = Coupon(
+                cr_id=claimed_restroom, description="This is filler description"
+            )
             coupon.save()
             return redirect("naturescall:restroom_detail", r_id=r_id)
     else:

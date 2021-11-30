@@ -731,7 +731,7 @@ class ViewTests(TestCase):
         yelp_id = "E6h-sMLmF86cuituw5zYxw"
         rr = create_restroom(yelp_id, desc)
         cr = ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
-        coupon = Coupon.objects.create(cr_id = cr, description = desc)
+        coupon = Coupon.objects.create(cr_id=cr, description=desc)
         response = self.client.get(
             reverse("naturescall:get_qr", args=(coupon.id,)),
         )
@@ -747,8 +747,8 @@ class ViewTests(TestCase):
         yelp_id = "E6h-sMLmF86cuituw5zYxw"
         rr = create_restroom(yelp_id, desc)
         cr = ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
-        coupon = Coupon.objects.create(cr_id = cr, description = desc)
+        coupon = Coupon.objects.create(cr_id=cr, description=desc)
         response = self.client.get(
-            reverse("naturescall:qr_confirm", args=(coupon.id,1)),
+            reverse("naturescall:qr_confirm", args=(coupon.id, 1)),
         )
         self.assertEqual(response.status_code, 200)
