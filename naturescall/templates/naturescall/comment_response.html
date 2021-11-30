@@ -1,0 +1,9 @@
+<h1>Respond to User Comment</h1>
+Rating: {{rating.rating}}<br>
+Headline: {{rating.headline}}<br>
+Comment: {{rating.comment}}<br>
+<form action="" method="POST">
+    {%csrf_token%}
+    {{form.as_p}}
+    <input class="btn btn-primary" type= "submit" value = "Submit">
+</form>

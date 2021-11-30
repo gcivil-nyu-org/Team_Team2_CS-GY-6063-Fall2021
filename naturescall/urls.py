@@ -14,6 +14,16 @@ urlpatterns = [
     path("delete_rating/<int:r_id>", views.delete_rating, name="delete_rating"),
     path("claim_restroom/<int:r_id>", views.claim_restroom, name="claim_restroom"),
     path("manage_restroom/<int:r_id>", views.manage_restroom, name="manage_restroom"),
+    path(
+        "comment_responses/<int:r_id>",
+        views.comment_responses,
+        name="comment_responses",
+    ),
+    path(
+        "comment_response/<int:rating_id>",
+        views.comment_response,
+        name="comment_response",
+    ),
 ]
 # urlpatterns += [
 #     path("accounts/", include("accounts.urls", namespace="accounts")),

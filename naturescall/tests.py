@@ -85,6 +85,19 @@ class ViewTests(TestCase):
         self.assertEqual(response2.status_code, 200)
         self.assertContains(response2, desc)
 
+    def test_one_restroom_via_form_logged_in_get(self):
+        """
+        A logged in user should be able to see the page to
+        add a restroom via the form.
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        response = self.client.get(
+            reverse("naturescall:add_restroom", args=(yelp_id,)),
+        )
+        self.assertEqual(response.status_code, 200)
+
     def test_one_restroom_invalid_form_logged_in(self):
         """
         A restroom with an invalid description should not be added
@@ -193,6 +206,7 @@ class ViewTests(TestCase):
         create_restroom(yelp_id, desc)
         user = User.objects.create_user("Jon", "jon@email.com")
         self.client.force_login(user=user)
+        self.client.get(reverse("naturescall:rate_restroom", args=(1,)))
         response = self.client.post(
             reverse("naturescall:rate_restroom", args=(1,)),
             data={
@@ -242,6 +256,10 @@ class ViewTests(TestCase):
             rating="4",
             headline="headline1",
             comment="comment1",
+        )
+        self.client.get(
+            reverse("naturescall:rate_restroom", args=(1,)),
+            HTTP_REFERER="http://localhost:8000/accounts/profile",
         )
         response = self.client.post(
             reverse("naturescall:rate_restroom", args=(1,)),
@@ -529,3 +547,176 @@ class ViewTests(TestCase):
         ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
         response = self.client.get(reverse("naturescall:claim_restroom", args=(1,)))
         self.assertEqual(response.status_code, 404)
+
+    def test_view_add_restroom_page_unauthorized(self):
+        """
+        A non-owner should NOT be able to access the
+        add_restroom page for a previously added restroom
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        create_restroom(yelp_id, desc)
+        response = self.client.get(
+            reverse("naturescall:add_restroom", args=(yelp_id,)),
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_view_add_restroom_page_authorized(self):
+        """
+        An owner should be able to access the
+        add_restroom page for their previously added restroom
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+        response = self.client.get(
+            reverse("naturescall:add_restroom", args=(yelp_id,)),
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_update_restroom_description_authorized(self):
+        """
+        The restroom owner should be able to update
+        the description
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        title = "Restroom"
+        rr = create_restroom(yelp_id, desc)
+        ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+        new_desc = "UPDATED DESCRIPTION"
+        response = self.client.post(
+            reverse("naturescall:add_restroom", args=(yelp_id,)),
+            data={"yelp_id": yelp_id, "description": new_desc, "title": title},
+        )
+        updated_rr = Restroom.objects.get(id=1)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(updated_rr.description, new_desc)
+
+    def test_manage_restroom_authorized(self):
+        """
+        The restroom owner should be able to manage it
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+        response = self.client.get(
+            reverse("naturescall:manage_restroom", args=(1,)),
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_manage_restroom_unauthorized(self):
+        """
+        A non-owner should not be able to manage a restroom
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+        user1 = User.objects.create_user("Jon1", "jon1@email.com")
+        self.client.force_login(user=user1)
+        response = self.client.get(
+            reverse("naturescall:manage_restroom", args=(1,)),
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_comment_responses_authorized(self):
+        """
+        The restroom owner should be able to see comment responses page
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+        response = self.client.get(
+            reverse("naturescall:comment_responses", args=(1,)),
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_comment_responses_unauthorized(self):
+        """
+        An unauthorized user should not be able to see comment responses page
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+        user1 = User.objects.create_user("Jon1", "jon1@email.com")
+        self.client.force_login(user=user1)
+        response = self.client.get(
+            reverse("naturescall:comment_responses", args=(1,)),
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_comment_response_authorized_and_unauthorized(self):
+        """
+        The restroom owner should be able to single comment response page but
+        other users should not
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+        user1 = User.objects.create_user("Jon1", "jon1@email.com")
+        Rating.objects.create(
+            restroom_id=rr,
+            user_id=user1,
+            rating="1",
+            headline="headline1",
+            comment="comment1",
+        )
+        response = self.client.get(
+            reverse("naturescall:comment_response", args=(1,)),
+        )
+        self.client.force_login(user1)
+        response1 = self.client.get(
+            reverse("naturescall:comment_response", args=(1,)),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response1.status_code, 404)
+
+    def test_comment_response_add_response(self):
+        """
+        The restroom owner should be able to single comment response page but
+        other users should not
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+        user1 = User.objects.create_user("Jon1", "jon1@email.com")
+        Rating.objects.create(
+            restroom_id=rr,
+            user_id=user1,
+            rating="1",
+            headline="headline1",
+            comment="comment1",
+        )
+        owner_response = "Thanks for commenting!"
+        response = self.client.post(
+            reverse("naturescall:comment_response", args=(1,)),
+            data={"response": owner_response},
+        )
+        response1 = self.client.get(reverse("naturescall:restroom_detail", args=(1,)))
+        self.assertEqual(response.status_code, 302)
+        self.assertContains(response1, owner_response)
