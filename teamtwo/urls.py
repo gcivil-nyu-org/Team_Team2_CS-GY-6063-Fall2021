@@ -30,4 +30,5 @@ urlpatterns = [
         name="password_reset",
     ),
     path("accounts/", include("django.contrib.auth.urls")),
+    path("qr_code/", include("qr_code.urls", namespace="qr_code")),
 ]
