@@ -1,4 +1,5 @@
-from naturescall.models import Restroom, Rating, ClaimedRestroom
+from naturescall.models import Restroom, Rating, ClaimedRestroom, Coupon, Transaction
+from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponseRedirect, Http404
 
@@ -20,6 +21,8 @@ from urllib.parse import quote
 # from urllib.parse import urlencode
 import os
 from django.urls import reverse
+
+# import datetime
 
 api_key = str(os.getenv("yelp_key"))
 map_embedded_key = str(os.getenv("map_embedded"))
@@ -424,11 +427,11 @@ def add_restroom(request, yelp_id):
             if k.get("error"):
                 raise Http404("Restroom does not exist")
             title = (
-                k["name"]
-                + " "
-                + k["location"]["address1"]
-                + " "
-                + k["location"]["city"]
+                    k["name"]
+                    + " "
+                    + k["location"]["address1"]
+                    + " "
+                    + k["location"]["city"]
             )
             form = AddRestroom(initial={"yelp_id": yelp_id, "title": title})
         else:
@@ -470,14 +473,23 @@ def restroom_detail(request, r_id):
     res["desc"] = current_restroom.description
 
     # determine if claim button should be shown
+    coupon_id = -1
+    show_claim = True
+    has_coupon = False
+
     # should not be shown to an unauthenticated user
-    show_claim = current_user.is_authenticated
+    if (not current_user.is_authenticated):
+        show_claim = False
     # should not be shown if any user has a verified claim
     # should not be shown if this user has a previous unverified claim
+
     all_claims = ClaimedRestroom.objects.filter(restroom_id=current_restroom)
     for claim in all_claims:
         if claim.verified or claim.user_id == current_user:
             show_claim = False
+            if hasCoupon(claim.id) != -1:
+                has_coupon = True
+                coupon_id = hasCoupon(claim.id)
 
     ratings = Rating.objects.filter(restroom_id=r_id)
     context = {
@@ -485,8 +497,44 @@ def restroom_detail(request, r_id):
         "ratings": ratings,
         "map_key": map_embedded_key,
         "show_claim": show_claim,
+        "has_coupon": has_coupon,
+        "coupon_id": coupon_id,
     }
     return render(request, "naturescall/restroom_detail.html", context)
+
+
+def hasCoupon(restroom_id):
+    coupons = Coupon.objects.filter(cr_id=restroom_id)
+    if coupons:
+        return coupons[0].id
+    return -1
+
+
+@login_required(login_url="login")
+def get_qr(request, c_id):
+    restroom = ClaimedRestroom.objects.filter(id=Coupon.objects.filter(id=c_id)[0].cr_id.id)[0].restroom_id
+    r_id = restroom.id
+    querySet = Restroom.objects.filter(id=r_id)
+    res_title = querySet.values()[0]["title"]
+    # url_string = "http://127.0.0.1:8000/qr_confirm/" + str(c_id) +'/' + str(request.user.id)
+    # url_string = request.build_absolute_uri() + "/qr_confirm/" + str(c_id) +'/' + str(request.user.id)
+    url_string = request.build_absolute_uri("/qr_confirm/") + str(c_id) + '/' + str(request.user.id)
+    context = {"title": res_title, "url": url_string}
+    return render(request, "naturescall/QR_code.html", context)
+
+
+@login_required(login_url="login")
+def qr_confirm(request, c_id, u_id):
+    restroom = ClaimedRestroom.objects.filter(id=Coupon.objects.filter(id=c_id)[0].cr_id.id)[0].restroom_id
+    r_id = restroom.id
+    res_querySet = Restroom.objects.filter(id=r_id)
+    res_title = res_querySet.values()[0]["title"]
+    context = {"title": res_title}
+    coupon = Coupon.objects.filter(id=c_id)[0]
+    user = User.objects.get(id=u_id)
+    transaction = Transaction(coupon_id=coupon, user_id=user)
+    transaction.save()
+    return render(request, "naturescall/qr_confirm.html", context)
 
 
 @login_required
@@ -506,6 +554,9 @@ def claim_restroom(request, r_id):
             claim.restroom_id = current_restroom
             claim.user_id = current_user
             claim.save()
+            claimed_restroom = ClaimedRestroom.objects.filter(restroom_id=claim.restroom_id)[0]
+            coupon = Coupon(cr_id=claimed_restroom, description="This is filler description")
+            coupon.save()
             return redirect("naturescall:restroom_detail", r_id=r_id)
     else:
         form = ClaimRestroom()

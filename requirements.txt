@@ -8,3 +8,4 @@ coverage
 six
 coveralls
 django_filter
+django-qr-code
