@@ -28,7 +28,6 @@ class ViewTests(TestCase):
         """
         response = self.client.get(reverse("naturescall:index"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Welcome to Nature's call")
 
     def test_missing_restroom(self):
         """
@@ -330,7 +329,7 @@ class ViewTests(TestCase):
         )
         response = self.client.get(reverse("naturescall:restroom_detail", args=(1,)))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Rating: 2.5")
+        self.assertContains(response, "2.5")
 
     def test_restroom_filter(self):
         """to check RestroomFilter is retrieving correct restroom"""

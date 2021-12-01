@@ -1,20 +1,12 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-		<!-- Bootstrap CSS -->
-		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-		<title>Nature's Call</title>
-  </head>
-  <body>
-    <div class="container">
-      <h3>Edit your rating for {{title}}</h3>
-      <form action="" method="POST">
-    		{%csrf_token%}
-    		{{form.as_p}}
-    		<input class="btn btn-primary" type= "submit" value = "Submit">
-    	</form>
-    </div>
-  </body>
-</html>
+{% extends "naturescall/base.html" %}
+
+{% block content %}
+<div class="container ratings">
+  <h3>Edit your rating for {{title}}</h3>
+  <form action="" method="POST">
+    {%csrf_token%}
+    {{form.as_p}}
+    <input class="btn btn-primary" type= "submit" value = "Submit">
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+body {
+    background-image: url("images/canopy-header.jpeg");
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: 100%;
+}
+
+.ratings {
+    color: white;
+    text-shadow: 2px 2px black;
+    text-align: center;
+}
