@@ -30,15 +30,16 @@
 				</div>
 			</div>
 			{% endfor %}
-			{% else %}
-			<h3>Location Not Found</h3>
 			{% endif %}
 		</div>
+		{% if data %}
 		<div class="col-xl" style="background-image: url('{{map}}'); background-repeat: no-repeat; background-attachment: fixed; background-size: contain; background-position: right;">
 			{% load static %}
 			<img src="{% static 'naturescall/legend2.jpg' %}" class="legend float-right">
 		</div>
+		{% else %}
+		<h3 class="mx-auto" style="color: white">Location Not Found</h3>
+		{% endif %}
 	</div>
 </div>
-
 {% endblock %}
