@@ -11,90 +11,88 @@
 
 {% block content %}
 <div class="container-fluid">
-    <img class="img-fluid" src={{res.yelp_data.image_url}} alt="Card image cap" style= "width:100%; height:15vw; object-fit: cover;">
-</div>
-
-<div class="container">
-    <div class="d-flex justify-content-center">
-        <div class="card">
-            <div class="card-body">
-                <h2 class="card-title">
-                    {{res.yelp_data.name}}
-                    {% if res.yelp_data.accessible %}
-                        <i class="fa fa-wheelchair"></i>
-                    {% endif %}
-                    {% if res.yelp_data.family_friendly  %}
-                        <span class="badge badge-secondary bg-primary text-white" >Family Friendly</span>
-                    {% endif %}
-                    {% if res.yelp_data.transaction_not_required  %}
-                        <span class="badge badge-secondary bg-warning text-dark">Transaction Not Required</span>
-                    {% endif %}
-                </h2>
+    <div class="row">
+        <div class="col-4">
+            <div class="row">
+                <!-- restroom image -->
+                <img class="mx-auto" src={{res.yelp_data.image_url}} alt="Card image cap" style= "width: 80%; height: 15vw; object-fit: cover;">
+            </div>
+            <div class="row">
+                <!-- map card -->
+                <iframe
+                    width="600"
+                    height="450"
+                    style="border:0"
+                    loading="lazy"
+                    allowfullscreen
+                    src="https://www.google.com/maps/embed/v1/directions?key={{map_key}}
+                    &origin={{request.session.search_location}}
+                    &destination= {{res.addr}}
+                    &mode=walking">
+                </iframe>
+                <!-- end of map -->
+            </div>
+        </div>
+        <div class="col-8">
+            <!-- restroom info -->
+            <div class="container-fluid" style="color: white; background-color: transparent">
+                <h2 style="text-shadow: 2px 2px black;">{{res.yelp_data.name}}</h2>
+                {% if res.yelp_data.accessible %}
+                    <i class="material-icons">accessible</i>
+                {% endif %}
+                {% if res.yelp_data.family_friendly  %}
+                    <i class="material-icons">child_friendly</i>
+                {% endif %}
+                {% if res.yelp_data.transaction_not_required  %}
+                    <i class="material-icons">attach_money</i>
+                {% endif %}
+                {% if is_first_time_rating %}
+                    <a href="{% url 'naturescall:rate_restroom' res.yelp_data.db_id %}" class="btn btn-success">Rate Now!</a>
+                {% else %}
+                    <a href="{% url 'naturescall:rate_restroom' res.yelp_data.db_id %}" class="btn btn-success">Edit Rating</a>
+                {% endif %}
+                {% if show_claim %}
+                    <a href="{% url 'naturescall:claim_restroom' res.yelp_data.db_id %}" class="btn btn-success">Claim This Restroom!</a>
+                {% endif %}
+                {% if has_coupon %}
+                    <a href="{% url 'naturescall:get_qr' coupon_id %}" class="btn btn-success">QR_code!</a>
+                {% endif %}
+                <br>
                 {% for star in five_stars %}
                 {% if star >= 1.0 %}
                 <span class="fa fa-star checked"></span>
                 {% elif star >= 0.5 %}
                 <span class="fa fa-star-half-full checked"></span>
                 {% else %}
-                <span class="fa fa-star"></span>
+                <span class="fa fa-star-o checked"></span>
                 {% endif %}
                 {% endfor %}
                 {{rating}}
-                <h4 class="card-text">{{res.addr}}</h4>
-                <h4 class="card-text">Description:</h4>
-                <h4 class="card-text">{{res.desc}}</h4>
-                {% if is_first_time_rating %}
-                    <a href="{% url 'naturescall:rate_restroom' res.yelp_data.db_id %}" class="btn btn-primary">Rate Now!</a>
-                {% else %}
-                    <a href="{% url 'naturescall:rate_restroom' res.yelp_data.db_id %}" class="btn btn-primary">Edit Rating</a>
-                {% endif %}
-                {% if show_claim %}
-                    <a href="{% url 'naturescall:claim_restroom' res.yelp_data.db_id %}" class="btn btn-primary">Claim This Restroom!</a>
-                {% endif %}
-                {% if has_coupon %}
-                    <a href="{% url 'naturescall:get_qr' coupon_id %}" class="btn btn-success">QR_code!</a>
-                {% endif %}
-            </div>
+                <h4 class="card-text" style="text-shadow: 2px 2px black;">{{res.addr}}</h4>
+                <h4 class="card-text" style="text-shadow: 2px 2px black;">Description:</h4>
+                <h4 class="card-text" style="text-shadow: 2px 2px black;">{{res.desc}}</h4>
         </div>
     </div>
 </div>
-
-<div class="col d-flex justify-content-center">
-    <!-- map card -->
-    <iframe
-            width="600"
-            height="450"
-            style="border:0"
-            loading="lazy"
-            allowfullscreen
-            src="https://www.google.com/maps/embed/v1/directions?key={{map_key}}
-            &origin={{request.session.search_location}}
-            &destination= {{res.addr}}
-            &mode=walking">
-    </iframe>
-    <!-- end of map -->
-</div>
-
-
 
 <div class="container">
-    <div class="card">
+    <h2 style="color: white; text-shadow: 2px 2px black;">Ratings</h2>
+    {% for rating in ratings %}
+    <div class="card text-white mb-3" style="background-color: rgba(0,0,0,0.75)">
         <div class="card-body">
-            <h2 class="card-title">Ratings</h2>
-            {% for rating in ratings %}
-                <h4>{{rating.user_id}}</h4>
-                <p>
-                    Rating: {{rating.rating}}<br>
-                    Headline: {{rating.headline}}<br>
-                    Comment: {{rating.comment}}<br>
-                    {% if rating.response %}
-                    Owner reply:<br>
-                    Response: {{ rating.response }}<br>
-                    {% endif %}
-                    <br>
-                </p>
-            {% endfor %}
+            <h4>{{rating.user_id}}</h4>
+            <p>
+                Rating: {{rating.rating}}<br>
+                Headline: {{rating.headline}}<br>
+                Comment: {{rating.comment}}<br>
+                {% if rating.response %}
+                Owner reply:<br>
+                Response: {{ rating.response }}<br>
+                {% endif %}
+                <br>
+            </p>
         </div>
     </div>
+    {% endfor %}
 </div>
 {% endblock %}

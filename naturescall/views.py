@@ -340,10 +340,13 @@ def restroom_detail(request, r_id):
                 coupon_id = hasCoupon(claim.id)
 
     ratings = Rating.objects.filter(restroom_id=r_id)
-    
+
     # determine if the rate button should display "Rate" or "Edit"
     if current_user.is_authenticated:
-        is_first_time_rating = not ratings.filter(restroom_id=r_id, user_id=current_user).exists()
+        is_first_time_rating = not ratings.filter(
+            restroom_id=r_id,
+            user_id=current_user
+            ).exists()
     else:
         is_first_time_rating = True
 
