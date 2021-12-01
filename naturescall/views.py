@@ -37,7 +37,7 @@ def index(request):
     context = {}
     # form = LocationForm(request.POST or None)
     # context["form"] = form
-    return render(request, "naturescall/index.html", context)
+    return render(request, "naturescall/home.html", context)
 
 
 # The search page for the user to enter address, search for and
@@ -340,15 +340,33 @@ def restroom_detail(request, r_id):
                 coupon_id = hasCoupon(claim.id)
 
     ratings = Rating.objects.filter(restroom_id=r_id)
+
+    # determine if the rate button should display "Rate" or "Edit"
+    if current_user.is_authenticated:
+        is_first_time_rating = not ratings.filter(
+            restroom_id=r_id,
+            user_id=current_user
+            ).exists()
+    else:
+        is_first_time_rating = True
+
+    rating = yelp_data["rating"]
+    if rating != "N/A":
+        five_stars = [rating - 0.0, rating - 1.0, rating - 2.0, rating - 3.0, rating - 4.0]
+    else:
+        five_stars = [0.0, 0.0, 0.0, 0.0, 0.0]
+
     context = {
         "res": res,
+        "rating": rating,
         "ratings": ratings,
+        "five_stars": five_stars,
         "map_key": map_embedded_key,
         "show_claim": show_claim,
         "has_coupon": has_coupon,
         "coupon_id": coupon_id,
+        "is_first_time_rating": is_first_time_rating,
     }
-    # print("coupon id is: " + str(coupon_id))
     return render(request, "naturescall/restroom_detail.html", context)
 
 
