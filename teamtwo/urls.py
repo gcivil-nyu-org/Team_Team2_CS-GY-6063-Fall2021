@@ -15,11 +15,20 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from accounts.forms import EmailValidationOnForgotPassword
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path("", include("naturescall.urls", namespace="naturescall")),
     path("admin/", admin.site.urls),
     path("accounts/", include("accounts.urls", namespace="accounts")),
+    path(
+        "accounts/password_reset/",
+        auth_views.PasswordResetView.as_view(
+            form_class=EmailValidationOnForgotPassword
+        ),
+        name="password_reset",
+    ),
     path("accounts/", include("django.contrib.auth.urls")),
     path("qr_code/", include("qr_code.urls", namespace="qr_code")),
 ]

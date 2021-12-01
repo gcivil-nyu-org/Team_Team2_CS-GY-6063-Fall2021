@@ -45,9 +45,10 @@ def index(request):
 def search_restroom(request):
     context = {}
     if request.GET.get("searched") is not None:
+        location = request.GET["searched"]
         if not request.user.is_authenticated:
             map = str(os.getenv("map"))
-            location = request.GET["searched"]
+            # location = request.GET["searched"]
             tableFilter = RestroomFilter()
             k = search(api_key, '"restroom","food","public"', location, 20)
             data = []
@@ -84,7 +85,7 @@ def search_restroom(request):
             return render(request, "naturescall/search_restroom.html", context)
         else:
             dbRestroom = Restroom.objects.all()
-            location = request.GET["searched"]
+            # location = request.GET["searched"]
             profile = request.user.profile
             d = {
                 "accessible": profile.accessible,
@@ -147,9 +148,9 @@ def search_restroom(request):
     else:
         dbRestroom = Restroom.objects.all()
         tableFilter = RestroomFilter(request.GET, queryset=dbRestroom)
-        location = request.session["search_location"]
+        location2 = request.session["search_location"]
         map = str(os.getenv("map"))
-        yelp_data = search(api_key, '"restroom","food","public"', location, 20)
+        yelp_data = search(api_key, '"restroom","food","public"', location2, 20)
         data = []
         data1 = []
         data2 = []
@@ -186,166 +187,13 @@ def search_restroom(request):
                     r_coordinates_long = restroom["coordinates"]["longitude"]
                     loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
             url = str(
-                google_url(loc, loc1, width=600, height=740, center=location, key=map)
+                google_url(loc, loc1, width=600, height=740, center=location2, key=map)
             )
         context["tableFilter"] = tableFilter
         context["data"] = data
         context["data1"] = data2
         context["map"] = url
         return render(request, "naturescall/filtered_search.html", context)
-
-
-"""def search_restroom(request):
-    context = {}
-    # form = LocationForm(request.POST or None)
-    # location = request.POST["location"]
-    if request.GET.get("searched") is not None:
-        map = str(os.getenv("map"))
-        location = request.GET["searched"]
-        tableFilter = RestroomFilter()
-        k = search(api_key, '"restroom","food","public"', location, 20)
-        data = []
-        loc = []
-        loc1 = []
-        if not k.get("error"):
-            data = k["businesses"]
-            # Sort by distance
-            data.sort(key=getDistance)
-        # Load rating data from our database
-        for restroom in data:
-            restroom["distance"] = int(restroom["distance"])
-            # print(restroom["distance"])
-            r_id = restroom["id"]
-            r_coordinates_lat = restroom["coordinates"]["latitude"]
-            r_coordinates_long = restroom["coordinates"]["longitude"]
-            loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
-            querySet = Restroom.objects.filter(yelp_id=r_id)
-            if not querySet:
-                restroom["our_rating"] = "no rating"
-                restroom["db_id"] = ""
-            else:
-                # restroom["our_rating"] = querySet.values()[0]["rating"]
-                restroom["db_id"] = querySet.values()[0]["id"]
-                # print(restroom["db_id"])
-            addr = str(restroom["location"]["display_address"])
-            restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
-        # context["form"] = form
-        url = str(
-            google_url(loc, loc1, width=800, height=740, center=location, key=map)
-        )
-        context["location"] = location
-        context["data"] = data
-        context["tableFilter"] = tableFilter
-        context["map"] = url
-        request.session["search_location"] = location
-        return render(request, "naturescall/search_restroom.html", context)
-    else:
-        dbRestroom = Restroom.objects.all()
-        tableFilter = RestroomFilter(request.GET, queryset=dbRestroom)
-        location = request.GET["filtered"]
-        map = str(os.getenv("map"))
-        yelp_data = search(api_key, '"restroom","food","public"', location, 20)
-        data = []
-        data1 = []
-        data2 = []
-        loc = []
-        loc1 = []
-        if not yelp_data.get("error"):
-            data1 = yelp_data["businesses"]
-            data1.sort(key=getDistance)
-        for restroom in data1:
-            restroom["distance"] = int(restroom["distance"])
-            r_id = restroom["id"]
-            querySet = Restroom.objects.filter(yelp_id=r_id)
-            if not querySet:
-                restroom["our_rating"] = "no rating"
-                restroom["db_id"] = ""
-            else:
-                restroom["db_id"] = querySet.values()[0]["id"]
-                restroom["accessible"] = querySet.values()[0]["accessible"]
-                restroom["family_friendly"] = querySet.values()[0]["family_friendly"]
-                restroom["transaction_not_required"] = querySet.values()[0][
-                    "transaction_not_required"
-                ]
-            addr = str(restroom["location"]["display_address"])
-            restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
-        id_obj_pairs = {}
-        for obj in tableFilter.qs:
-            id = obj.id
-            id_obj_pairs[id] = obj
-        for restroom in data1:
-            if restroom["db_id"] in id_obj_pairs:
-                data.append(restroom)
-                r_coordinates_lat = restroom["coordinates"]["latitude"]
-                r_coordinates_long = restroom["coordinates"]["longitude"]
-                loc1.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
-            else:
-                data2.append(restroom)
-                r_coordinates_lat = restroom["coordinates"]["latitude"]
-                r_coordinates_long = restroom["coordinates"]["longitude"]
-                loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
-        url = str(
-            google_url(loc, loc1, width=600, height=740, center=location, key=map)
-        )
-        context["tableFilter"] = tableFilter
-        context["data"] = data
-        context["data1"] = data2
-        context["map"] = url
-        request.session["search_location"] = location
-        return render(request, "naturescall/filtered_search.html", context)
-"""
-
-# Filtered search results-:
-"""def filter_restroom(request):
-    dbRestroom = Restroom.objects.all()
-    tableFilter = RestroomFilter(request.GET, queryset=dbRestroom)
-    location = request.GET.get("filtered")
-    map = str(os.getenv("map"))
-    yelp_data = search(api_key, '"restroom","food","public"', location, 20)
-    data = []
-    data1 = []
-    data2 = []
-    loc = []
-    loc1 = []
-    if not yelp_data.get("error"):
-        data1 = yelp_data["businesses"]
-        data1.sort(key=getDistance)
-    for restroom in data1:
-        restroom["distance"] = int(restroom["distance"])
-        r_id = restroom["id"]
-        querySet = Restroom.objects.filter(yelp_id=r_id)
-        if not querySet:
-            restroom["our_rating"] = "no rating"
-            restroom["db_id"] = ""
-        else:
-            restroom["db_id"] = querySet.values()[0]["id"]
-            restroom["accessible"] = querySet.values()[0]["accessible"]
-            restroom["family_friendly"] = querySet.values()[0]["family_friendly"]
-            restroom["transaction_not_required"] = querySet.values()[0][
-                "transaction_not_required"
-            ]
-        addr = str(restroom["location"]["display_address"])
-        restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
-    id_obj_pairs = {}
-    for obj in tableFilter.qs:
-        id = obj.id
-        id_obj_pairs[id] = obj
-    for restroom in data1:
-        if restroom["db_id"] in id_obj_pairs:
-            data.append(restroom)
-            r_coordinates_lat = restroom["coordinates"]["latitude"]
-            r_coordinates_long = restroom["coordinates"]["longitude"]
-            loc1.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
-        else:
-            data2.append(restroom)
-            r_coordinates_lat = restroom["coordinates"]["latitude"]
-            r_coordinates_long = restroom["coordinates"]["longitude"]
-            loc.append(str(r_coordinates_lat) + "," + str(r_coordinates_long))
-    url = str(google_url(loc, loc1, width=600, height=740, center=location, key=map))
-    context = {"tableFilter": tableFilter, "data": data, "data1": data2, "map": url}
-    request.session["search_location"] = location
-    return render(request, "naturescall/filtered_search.html", context)
-"""
 
 
 @login_required(login_url="login")
@@ -500,7 +348,7 @@ def restroom_detail(request, r_id):
         "has_coupon": has_coupon,
         "coupon_id": coupon_id,
     }
-    #print("coupon id is: " + str(coupon_id))
+    # print("coupon id is: " + str(coupon_id))
     return render(request, "naturescall/restroom_detail.html", context)
 
 
@@ -569,7 +417,7 @@ def claim_restroom(request, r_id):
             claimed_restroom = ClaimedRestroom.objects.filter(
                 restroom_id=claim.restroom_id
             )[0]
-            #create a tempt coupon, just for now
+            # create a tempt coupon, just for now
             coupon = Coupon(
                 cr_id=claimed_restroom, description="This is filler description"
             )
@@ -675,6 +523,7 @@ def google_url(loc, loc1, width, height, center, key, maptype="roadmap"):
     gmap_url = "https://maps.googleapis.com/maps/api/staticmap"
     size_str = str(width) + "x" + str(height)
     markers_objects = []
+    center = center
     obj = style_marker(center, style_options={"color": "red", "label": "S"})
     markers_objects.append(obj)
     for loc2 in loc:
@@ -687,6 +536,7 @@ def google_url(loc, loc1, width, height, center, key, maptype="roadmap"):
     mapopts = {
         "center": center,
         "size": size_str,
+        "zoom": "16.2",
         "markers": markers_objects,
         "maptype": maptype,
         "key": key,

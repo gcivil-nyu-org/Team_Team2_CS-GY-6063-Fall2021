@@ -764,6 +764,7 @@ class ViewTests(TestCase):
         rr = create_restroom(yelp_id, desc)
         cr = ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
         coupon = Coupon.objects.create(cr_id=cr, description=desc)
+        coupon
         response = self.client.get(reverse("naturescall:restroom_detail", args=(1,)))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["has_coupon"], True)
