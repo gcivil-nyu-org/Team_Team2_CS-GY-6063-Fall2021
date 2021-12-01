@@ -1,9 +1,10 @@
-from naturescall.models import Restroom, Rating, ClaimedRestroom
+from naturescall.models import Restroom, Rating, ClaimedRestroom, Coupon, Transaction
+from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponseRedirect, Http404
 
 # from .forms import LocationForm
-from .forms import AddRestroom, AddRating, ClaimRestroom
+from .forms import AddRestroom, AddRating, ClaimRestroom, CommentResponse
 import requests
 from django.contrib.auth.decorators import login_required
 from .filters import RestroomFilter
@@ -21,6 +22,8 @@ from urllib.parse import quote
 import os
 from django.urls import reverse
 
+# import datetime
+
 api_key = str(os.getenv("yelp_key"))
 map_embedded_key = str(os.getenv("map_embedded"))
 
@@ -34,7 +37,7 @@ def index(request):
     context = {}
     # form = LocationForm(request.POST or None)
     # context["form"] = form
-    return render(request, "naturescall/index.html", context)
+    return render(request, "naturescall/home.html", context)
 
 
 # The search page for the user to enter address, search for and
@@ -82,7 +85,7 @@ def search_restroom(request):
             return render(request, "naturescall/search_restroom.html", context)
         else:
             dbRestroom = Restroom.objects.all()
-            # location1 = request.GET["searched"]
+            # location = request.GET["searched"]
             profile = request.user.profile
             d = {
                 "accessible": profile.accessible,
@@ -318,23 +321,98 @@ def restroom_detail(request, r_id):
     res["desc"] = current_restroom.description
 
     # determine if claim button should be shown
+    coupon_id = -1
+    show_claim = True
+    has_coupon = False
+
     # should not be shown to an unauthenticated user
-    show_claim = current_user.is_authenticated
+    if not current_user.is_authenticated:
+        show_claim = False
     # should not be shown if any user has a verified claim
     # should not be shown if this user has a previous unverified claim
+
     all_claims = ClaimedRestroom.objects.filter(restroom_id=current_restroom)
     for claim in all_claims:
         if claim.verified or claim.user_id == current_user:
             show_claim = False
+            if hasCoupon(claim.id) != -1:
+                has_coupon = True
+                coupon_id = hasCoupon(claim.id)
 
     ratings = Rating.objects.filter(restroom_id=r_id)
+
+    # determine if the rate button should display "Rate" or "Edit"
+    if current_user.is_authenticated:
+        is_first_time_rating = not ratings.filter(
+            restroom_id=r_id,
+            user_id=current_user
+            ).exists()
+    else:
+        is_first_time_rating = True
+
+    rating = yelp_data["rating"]
+    if rating != "N/A":
+        five_stars = [rating - 0.0, rating - 1.0, rating - 2.0, rating - 3.0, rating - 4.0]
+    else:
+        five_stars = [0.0, 0.0, 0.0, 0.0, 0.0]
+
     context = {
         "res": res,
+        "rating": rating,
         "ratings": ratings,
+        "five_stars": five_stars,
         "map_key": map_embedded_key,
         "show_claim": show_claim,
+        "has_coupon": has_coupon,
+        "coupon_id": coupon_id,
+        "is_first_time_rating": is_first_time_rating,
     }
     return render(request, "naturescall/restroom_detail.html", context)
+
+
+def hasCoupon(restroom_id):
+    coupons = Coupon.objects.filter(cr_id=restroom_id)
+    if coupons:
+        return coupons[0].id
+    return -1
+
+
+@login_required(login_url="login")
+def get_qr(request, c_id):
+    restroom = ClaimedRestroom.objects.filter(
+        id=Coupon.objects.filter(id=c_id)[0].cr_id.id
+    )[0].restroom_id
+    r_id = restroom.id
+    querySet = Restroom.objects.filter(id=r_id)
+    res_title = querySet.values()[0]["title"]
+    # url_string = "http://127.0.0.1:8000/qr_confirm/"
+    # + str(c_id) +'/' + str(request.user.id)
+    # url_string = request.build_absolute_uri() + "/qr_confirm/"
+    # + str(c_id) +'/' + str(request.user.id)
+    url_string = (
+        request.build_absolute_uri("/qr_confirm/")
+        + str(c_id)
+        + "/"
+        + str(request.user.id)
+    )
+    context = {"title": res_title, "url": url_string}
+    return render(request, "naturescall/QR_code.html", context)
+
+
+@login_required(login_url="login")
+def qr_confirm(request, c_id, u_id):
+    restroom = ClaimedRestroom.objects.filter(
+        id=Coupon.objects.filter(id=c_id)[0].cr_id.id
+    )[0].restroom_id
+    r_id = restroom.id
+    res_querySet = Restroom.objects.filter(id=r_id)
+    res_title = res_querySet.values()[0]["title"]
+    context = {"title": res_title}
+    coupon = Coupon.objects.filter(id=c_id)[0]
+    user = User.objects.get(id=u_id)
+    transaction = Transaction(coupon_id=coupon, user_id=user)
+    transaction.save()
+    return render(request, "naturescall/qr_confirm.html", context)
 
 
 @login_required
@@ -354,6 +432,14 @@ def claim_restroom(request, r_id):
             claim.restroom_id = current_restroom
             claim.user_id = current_user
             claim.save()
+            claimed_restroom = ClaimedRestroom.objects.filter(
+                restroom_id=claim.restroom_id
+            )[0]
+            # create a tempt coupon, just for now
+            coupon = Coupon(
+                cr_id=claimed_restroom, description="This is filler description"
+            )
+            coupon.save()
             return redirect("naturescall:restroom_detail", r_id=r_id)
     else:
         form = ClaimRestroom()
@@ -380,8 +466,8 @@ def manage_restroom(request, r_id):
 
 
 @login_required
-def comment_response(request, r_id):
-    """manage a restroom"""
+def comment_responses(request, r_id):
+    """list all comments for a managed restroom"""
     current_restroom = get_object_or_404(Restroom, id=r_id)
     current_user = request.user
     valid_claim = ClaimedRestroom.objects.filter(
@@ -390,12 +476,44 @@ def comment_response(request, r_id):
     if not valid_claim:
         raise Http404("Access Denied")
     all_ratings = Rating.objects.filter(restroom_id=current_restroom)
-    all_comments = [rating.comment for rating in all_ratings]
     context = {
         "title": current_restroom.title,
-        "r_id": r_id,
-        "comments": all_comments,
         "ratings": all_ratings,
+    }
+    return render(request, "naturescall/comment_responses.html", context)
+
+
+@login_required
+def comment_response(request, rating_id):
+    """show a single comment for a managed restroom to allow for response"""
+    current_rating = get_object_or_404(Rating, id=rating_id)
+    current_restroom = get_object_or_404(Restroom, id=current_rating.restroom_id_id)
+    current_user = request.user
+    valid_claim = ClaimedRestroom.objects.filter(
+        restroom_id=current_restroom, user_id=current_user, verified=True
+    )
+    if not valid_claim:
+        raise Http404("Access Denied")
+
+    if request.method == "POST":
+        form = CommentResponse(request.POST)
+        if form.is_valid():
+            update = form.save(commit=False)
+            update.rating = current_rating.rating
+            update.headline = current_rating.headline
+            update.comment = current_rating.comment
+            update.restroom_id = current_restroom
+            update.user_id = current_rating.user_id
+            update.id = current_rating.id
+            update.save()
+            return redirect("naturescall:comment_responses", r_id=current_restroom.id)
+    else:
+        form = CommentResponse(instance=current_rating)
+
+    context = {
+        "title": current_restroom.title,
+        "rating": current_rating,
+        "form": form,
     }
     return render(request, "naturescall/comment_response.html", context)
 
@@ -423,18 +541,20 @@ def google_url(loc, loc1, width, height, center, key, maptype="roadmap"):
     gmap_url = "https://maps.googleapis.com/maps/api/staticmap"
     size_str = str(width) + "x" + str(height)
     markers_objects = []
+    center = center
     obj = style_marker(center, style_options={"color": "red", "label": "S"})
     markers_objects.append(obj)
     for loc2 in loc:
         obj = style_marker(loc2, style_options={"color": "green", "label": "R"})
         markers_objects.append(obj)
-    for l1 in loc1:
-        obj = style_marker(l1, style_options={"color": "orange", "label": "F"})
-        markers_objects.append(obj)
+    if loc1:
+        for l1 in loc1:
+            obj = style_marker(l1, style_options={"color": "orange", "label": "F"})
+            markers_objects.append(obj)
     mapopts = {
         "center": center,
         "size": size_str,
-        "zoom": "16",
+        "zoom": "16.2",
         "markers": markers_objects,
         "maptype": maptype,
         "key": key,

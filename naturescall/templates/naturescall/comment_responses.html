@@ -1,0 +1,19 @@
+{% extends "naturescall/base.html" %}
+
+{% block content %}
+<div class="container ratings">
+    <h2>{{title}}</h2>
+    <h4>Responses to User Comments</h4>
+    {% for rating in ratings %}
+    <div class="container mb-3 py-3" style="background-color: rgba(0,0,0,0.5);">
+        <h4>{{rating.user_id}}</h4>
+        Rating: {{rating.rating}}<br>
+        Headline: {{rating.headline}}<br>
+        Comment: {{rating.comment}}<br>
+        Current Response: {{ rating.response }}<br>
+        <a href="{% url 'naturescall:comment_response' rating.id %}" style="color: greenyellow">Update Response</a>
+        <br>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
