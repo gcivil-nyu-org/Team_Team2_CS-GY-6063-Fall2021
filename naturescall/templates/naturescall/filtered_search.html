@@ -9,7 +9,7 @@
 				<div class="card card-body">
 					<form class="form-inline my-2 my-lg-0" method="GET" enctype="multipart/form-data">
 						{% csrf_token %}
-						{{ tableFilter.form.as_p }}
+						{{tableFilter.form.as_p}}
 						<button href="{% url 'naturescall:search_restroom'%}" class="btn btn-outline-success my-2 my-sm-0 ml-auto" type="submit">Search</button>
 					</form>
 				</div>
@@ -51,7 +51,7 @@
 		</div>
 		<div class="col-xl" style="background-image: url('{{map}}'); background-repeat: no-repeat; background-attachment: fixed; background-size: contain; background-position: right;">
 			{% load static %}
-			<img class="float-right" src="{% static 'naturescall/legend2.jpg' %}" class="legend">
+			<img src="{% static 'naturescall/legend2.jpg' %}" class="legend float-right">
 		</div>
 	</div>
 </div>

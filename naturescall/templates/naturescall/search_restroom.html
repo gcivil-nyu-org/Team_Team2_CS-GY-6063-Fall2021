@@ -3,9 +3,9 @@
 {% block content %}
 <div class="container-fluid">
 	<div class= "row">
-		<div class="col-md-6">
-			<a class="btn btn-primary" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">Filters</a>
-			<div class="collapse" id="collapseExample">
+		<div class="col-auto">
+			<button class="btn btn-primary mt-3 mb-3" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">Filters</button>
+			<div class="collapse mb-3" id="collapseExample">
 				<div class="card card-body">
 					<form class="form-inline my-2 my-lg-0" method="GET">
 						{% csrf_token %}
@@ -30,13 +30,13 @@
 				</div>
 			</div>
 			{% endfor %}
-			<div class="col-xl" style="background-image: url('{{map}}'); background-repeat: no-repeat; background-attachment: fixed; background-size: contain; background-position: right;">
-				{% load static %}
-				<img src="{% static 'naturescall/legend2.jpg' %}" class="legend">
-			</div>
 			{% else %}
 			<h3>Location Not Found</h3>
 			{% endif %}
+		</div>
+		<div class="col-xl" style="background-image: url('{{map}}'); background-repeat: no-repeat; background-attachment: fixed; background-size: contain; background-position: right;">
+			{% load static %}
+			<img src="{% static 'naturescall/legend2.jpg' %}" class="legend float-right">
 		</div>
 	</div>
 </div>
