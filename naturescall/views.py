@@ -4,7 +4,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponseRedirect, Http404
 
 # from .forms import LocationForm
-from .forms import AddRestroom, AddRating, ClaimRestroom, CommentResponse
+from .forms import AddRestroom, AddRating, ClaimRestroom, CommentResponse, addCoupon
 import requests
 from django.contrib.auth.decorators import login_required
 from .filters import RestroomFilter
@@ -379,12 +379,15 @@ def hasCoupon(restroom_id):
 
 @login_required(login_url="login")
 def get_qr(request, c_id):
-    restroom = ClaimedRestroom.objects.filter(
-        id=Coupon.objects.filter(id=c_id)[0].cr_id.id
-    )[0].restroom_id
-    r_id = restroom.id
-    querySet = Restroom.objects.filter(id=r_id)
-    res_title = querySet.values()[0]["title"]
+    # restroom = ClaimedRestroom.objects.filter(
+    #     id=Coupon.objects.filter(id=c_id)[0].cr_id.id
+    # )[0].restroom_id
+    current_coupon = get_object_or_404(Coupon, id=c_id)
+    current_restroom = current_coupon.cr_id.restroom_id
+    res_title = current_restroom.title
+    # r_id = restroom.id
+    # querySet = Restroom.objects.filter(id=r_id)
+    # res_title = querySet.values()[0]["title"]
     # url_string = "http://127.0.0.1:8000/qr_confirm/"
     # + str(c_id) +'/' + str(request.user.id)
     # url_string = request.build_absolute_uri() + "/qr_confirm/"
@@ -401,18 +404,23 @@ def get_qr(request, c_id):
 
 @login_required(login_url="login")
 def qr_confirm(request, c_id, u_id):
-    restroom = ClaimedRestroom.objects.filter(
-        id=Coupon.objects.filter(id=c_id)[0].cr_id.id
-    )[0].restroom_id
-    r_id = restroom.id
-    res_querySet = Restroom.objects.filter(id=r_id)
-    res_title = res_querySet.values()[0]["title"]
+     # restroom = ClaimedRestroom.objects.filter(
+    #     id=Coupon.objects.filter(id=c_id)[0].cr_id.id
+    # )[0].restroom_id
+    # r_id = restroom.id
+    # res_querySet = Restroom.objects.filter(id=r_id)
+    # res_title = res_querySet.values()[0]["title"]
+    current_coupon = get_object_or_404(Coupon, id=c_id)
+    current_user = get_object_or_404(User, id=u_id)
+    current_restroom = current_coupon.cr_id.restroom_id
+    res_title = current_restroom.title
     context = {"title": res_title}
-    coupon = Coupon.objects.filter(id=c_id)[0]
-    user = User.objects.get(id=u_id)
-    transaction = Transaction(coupon_id=coupon, user_id=user)
+    # coupon = Coupon.objects.filter(id=c_id)[0]
+    # user = User.objects.get(id=u_id)
+    transaction = Transaction(coupon_id=current_coupon, user_id=current_user)
     transaction.save()
     return render(request, "naturescall/qr_confirm.html", context)
+
 
 
 @login_required
@@ -457,13 +465,61 @@ def manage_restroom(request, r_id):
     )
     if not valid_claim:
         raise Http404("Access Denied")
+    has_Coupon = False
+    if hasCoupon(valid_claim[0].id) != -1:
+        has_Coupon = True
     context = {
         "title": current_restroom.title,
         "yelp_id": current_restroom.yelp_id,
         "r_id": current_restroom.id,
+        "hasCoupon" : has_Coupon,
     }
     return render(request, "naturescall/manage_restroom.html", context)
 
+@login_required
+def coupon_register(request, r_id):
+    current_restroom = get_object_or_404(Restroom, id=r_id)
+    current_claims = ClaimedRestroom.objects.filter(
+        restroom_id=current_restroom, verified=True
+    )
+    if not current_claims:
+        raise Http404("Access Denied")
+    if request.method == "POST":
+        form = addCoupon(data=request.POST)
+        if form.is_valid():
+            entry = form.save(commit=False)
+            entry.cr_id = current_claims[0]
+            entry.save()
+            msg = "Congratulations, Your coupon has been registered!"
+            messages.success(request, f"{msg}")
+            return redirect("naturescall:manage_restroom", r_id=current_restroom.id)
+    else:
+        form = addCoupon()
+        context = {"form": form}
+        return render(request, "naturescall/coupon_register.html", context)
+
+@login_required
+def coupon_edit(request, r_id):
+    current_restroom = get_object_or_404(Restroom, id=r_id)
+    current_claims = ClaimedRestroom.objects.filter(
+        restroom_id=current_restroom, verified=True
+    )
+    if not current_claims:
+        raise Http404("Access Denied")
+    coupon = get_object_or_404(Coupon, cr_id = current_claims.values()[0]['id'])
+    if request.method == "POST":
+        form = addCoupon(data=request.POST)
+        if form.is_valid():
+            entry = form.save(commit=False)
+            coupon.description = entry.description
+            coupon.save()
+            msg = "Congratulations, Your coupon has been updated!"
+            messages.success(request, f"{msg}")
+            return redirect("naturescall:manage_restroom", r_id=current_restroom.id)
+    else:
+        form = addCoupon()
+        context = {"form": form}
+        return render(request, "naturescall/coupon_edit.html", context)
 
 @login_required
 def comment_responses(request, r_id):

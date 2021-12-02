@@ -1,5 +1,5 @@
 from django import forms
-from .models import Restroom, Rating
+from .models import Restroom, Rating, Coupon
 
 
 class LocationForm(forms.Form):
@@ -57,3 +57,9 @@ class CommentResponse(forms.ModelForm):
 
 class ClaimRestroom(forms.Form):
     claim = forms.CheckboxInput()
+
+class addCoupon(forms.ModelForm):
+    description = forms.CharField(widget=forms.TextInput(attrs={"size": 80}))
+    class Meta:
+        model = Coupon
+        fields = ["description",]
