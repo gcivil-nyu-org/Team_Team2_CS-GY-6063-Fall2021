@@ -209,9 +209,7 @@ class ViewTests(TestCase):
         response = self.client.post(
             reverse("naturescall:rate_restroom", args=(1,)),
             data={
-                "rating": "4",
-                "headline": "headline1",
-                "comment": "comment1",
+                "rating": "4", "headline": "headline1", "comment": "comment1",
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -263,9 +261,7 @@ class ViewTests(TestCase):
         response = self.client.post(
             reverse("naturescall:rate_restroom", args=(1,)),
             data={
-                "rating": "2",
-                "headline": "headline2",
-                "comment": "comment2",
+                "rating": "2", "headline": "headline2", "comment": "comment2",
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -527,8 +523,7 @@ class ViewTests(TestCase):
         response = self.client.post(
             reverse("naturescall:claim_restroom", args=(1,)),
             data={
-                "restroom_id": rr,
-                "user_id": user,
+                "restroom_id": rr, "user_id": user,
             },
         )
         self.assertEqual(response.status_code, 302)
@@ -609,9 +604,7 @@ class ViewTests(TestCase):
         yelp_id = "E6h-sMLmF86cuituw5zYxw"
         rr = create_restroom(yelp_id, desc)
         ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
-        response = self.client.get(
-            reverse("naturescall:manage_restroom", args=(1,)),
-        )
+        response = self.client.get(reverse("naturescall:manage_restroom", args=(1,)),)
         self.assertEqual(response.status_code, 200)
 
     def test_manage_restroom_unauthorized(self):
@@ -626,9 +619,7 @@ class ViewTests(TestCase):
         ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
         user1 = User.objects.create_user("Jon1", "jon1@email.com")
         self.client.force_login(user=user1)
-        response = self.client.get(
-            reverse("naturescall:manage_restroom", args=(1,)),
-        )
+        response = self.client.get(reverse("naturescall:manage_restroom", args=(1,)),)
         self.assertEqual(response.status_code, 404)
 
     def test_comment_responses_authorized(self):
@@ -641,9 +632,7 @@ class ViewTests(TestCase):
         yelp_id = "E6h-sMLmF86cuituw5zYxw"
         rr = create_restroom(yelp_id, desc)
         ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
-        response = self.client.get(
-            reverse("naturescall:comment_responses", args=(1,)),
-        )
+        response = self.client.get(reverse("naturescall:comment_responses", args=(1,)),)
         self.assertEqual(response.status_code, 200)
 
     def test_comment_responses_unauthorized(self):
@@ -658,9 +647,7 @@ class ViewTests(TestCase):
         ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
         user1 = User.objects.create_user("Jon1", "jon1@email.com")
         self.client.force_login(user=user1)
-        response = self.client.get(
-            reverse("naturescall:comment_responses", args=(1,)),
-        )
+        response = self.client.get(reverse("naturescall:comment_responses", args=(1,)),)
         self.assertEqual(response.status_code, 404)
 
     def test_comment_response_authorized_and_unauthorized(self):
@@ -682,13 +669,9 @@ class ViewTests(TestCase):
             headline="headline1",
             comment="comment1",
         )
-        response = self.client.get(
-            reverse("naturescall:comment_response", args=(1,)),
-        )
+        response = self.client.get(reverse("naturescall:comment_response", args=(1,)),)
         self.client.force_login(user1)
-        response1 = self.client.get(
-            reverse("naturescall:comment_response", args=(1,)),
-        )
+        response1 = self.client.get(reverse("naturescall:comment_response", args=(1,)),)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response1.status_code, 404)
 
@@ -731,9 +714,7 @@ class ViewTests(TestCase):
         rr = create_restroom(yelp_id, desc)
         cr = ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
         coupon = Coupon.objects.create(cr_id=cr, description=desc)
-        response = self.client.get(
-            reverse("naturescall:get_qr", args=(coupon.id,)),
-        )
+        response = self.client.get(reverse("naturescall:get_qr", args=(coupon.id,)),)
         self.assertEqual(response.status_code, 200)
 
     def test_confirm_qr(self):
@@ -763,7 +744,48 @@ class ViewTests(TestCase):
         rr = create_restroom(yelp_id, desc)
         cr = ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
         coupon = Coupon.objects.create(cr_id=cr, description=desc)
-        coupon
+        coupon.description = "desc"
         response = self.client.get(reverse("naturescall:restroom_detail", args=(1,)))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["has_coupon"], True)
+
+    def test_coupon_register(self):
+        """
+        Test case for registering coupon
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        cr = ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+        print(cr)
+        response = self.client.get(reverse("naturescall:coupon_register", args=(1,)))
+        response2 = self.client.post(
+            reverse("naturescall:coupon_register", args=(1,)),
+            data={"description": desc},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response2.status_code, 302)
+
+    def test_coupon_edit(self):
+        """
+        Test case for registering coupon
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        cr = ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+        coupon = Coupon.objects.create(cr_id=cr, description=desc)
+        coupon.description = "desc"
+        response = self.client.get(reverse("naturescall:coupon_edit", args=(1,)))
+        response2 = self.client.post(
+            reverse("naturescall:coupon_edit", args=(1,)),
+            data={"description": "hello"},
+        )
+        coupon_new = Coupon.objects.filter(cr_id=cr)[0]
+        self.assertEqual(coupon_new.description, "hello")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response2.status_code, 302)
