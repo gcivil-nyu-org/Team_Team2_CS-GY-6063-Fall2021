@@ -411,7 +411,7 @@ def claim_restroom(request, r_id):
     current_claims = ClaimedRestroom.objects.filter(
         restroom_id=current_restroom, verified=True
     )
-    if not current_claims:
+    if current_claims:
         raise Http404("Access Denied")
     current_user = request.user
     if request.method == "POST":
