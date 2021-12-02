@@ -58,8 +58,12 @@ class CommentResponse(forms.ModelForm):
 class ClaimRestroom(forms.Form):
     claim = forms.CheckboxInput()
 
+
 class addCoupon(forms.ModelForm):
     description = forms.CharField(widget=forms.TextInput(attrs={"size": 80}))
+
     class Meta:
         model = Coupon
-        fields = ["description",]
+        fields = [
+            "description",
+        ]

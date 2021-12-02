@@ -344,15 +344,20 @@ def restroom_detail(request, r_id):
     # determine if the rate button should display "Rate" or "Edit"
     if current_user.is_authenticated:
         is_first_time_rating = not ratings.filter(
-            restroom_id=r_id,
-            user_id=current_user
-            ).exists()
+            restroom_id=r_id, user_id=current_user
+        ).exists()
     else:
         is_first_time_rating = True
 
     rating = yelp_data["rating"]
     if rating != "N/A":
-        five_stars = [rating - 0.0, rating - 1.0, rating - 2.0, rating - 3.0, rating - 4.0]
+        five_stars = [
+            rating - 0.0,
+            rating - 1.0,
+            rating - 2.0,
+            rating - 3.0,
+            rating - 4.0,
+        ]
     else:
         five_stars = [0.0, 0.0, 0.0, 0.0, 0.0]
 
@@ -404,7 +409,7 @@ def get_qr(request, c_id):
 
 @login_required(login_url="login")
 def qr_confirm(request, c_id, u_id):
-     # restroom = ClaimedRestroom.objects.filter(
+    # restroom = ClaimedRestroom.objects.filter(
     #     id=Coupon.objects.filter(id=c_id)[0].cr_id.id
     # )[0].restroom_id
     # r_id = restroom.id
@@ -414,13 +419,12 @@ def qr_confirm(request, c_id, u_id):
     current_user = get_object_or_404(User, id=u_id)
     current_restroom = current_coupon.cr_id.restroom_id
     res_title = current_restroom.title
-    context = {"title": res_title}
+    context = {"title": res_title, "description": current_coupon.description}
     # coupon = Coupon.objects.filter(id=c_id)[0]
     # user = User.objects.get(id=u_id)
     transaction = Transaction(coupon_id=current_coupon, user_id=current_user)
     transaction.save()
     return render(request, "naturescall/qr_confirm.html", context)
-
 
 
 @login_required
@@ -440,14 +444,6 @@ def claim_restroom(request, r_id):
             claim.restroom_id = current_restroom
             claim.user_id = current_user
             claim.save()
-            claimed_restroom = ClaimedRestroom.objects.filter(
-                restroom_id=claim.restroom_id
-            )[0]
-            # create a tempt coupon, just for now
-            coupon = Coupon(
-                cr_id=claimed_restroom, description="This is filler description"
-            )
-            coupon.save()
             return redirect("naturescall:restroom_detail", r_id=r_id)
     else:
         form = ClaimRestroom()
@@ -472,9 +468,10 @@ def manage_restroom(request, r_id):
         "title": current_restroom.title,
         "yelp_id": current_restroom.yelp_id,
         "r_id": current_restroom.id,
-        "hasCoupon" : has_Coupon,
+        "hasCoupon": has_Coupon,
     }
     return render(request, "naturescall/manage_restroom.html", context)
+
 
 @login_required
 def coupon_register(request, r_id):
@@ -498,6 +495,7 @@ def coupon_register(request, r_id):
         context = {"form": form}
         return render(request, "naturescall/coupon_register.html", context)
 
+
 @login_required
 def coupon_edit(request, r_id):
     current_restroom = get_object_or_404(Restroom, id=r_id)
@@ -506,7 +504,7 @@ def coupon_edit(request, r_id):
     )
     if not current_claims:
         raise Http404("Access Denied")
-    coupon = get_object_or_404(Coupon, cr_id = current_claims.values()[0]['id'])
+    coupon = get_object_or_404(Coupon, cr_id=current_claims.values()[0]["id"])
     if request.method == "POST":
         form = addCoupon(data=request.POST)
         if form.is_valid():
@@ -520,6 +518,7 @@ def coupon_edit(request, r_id):
         form = addCoupon()
         context = {"form": form}
         return render(request, "naturescall/coupon_edit.html", context)
+
 
 @login_required
 def comment_responses(request, r_id):
