@@ -1,36 +1,23 @@
-{% extends "naturescall/index.html" %}
-
-{% block form %}
-<form class="form-inline my-2 my-lg-0" method="GET" action= "{% url 'naturescall:search_restroom' %}">
-	{% csrf_token %}
-<input class="form-control mr-sm-2" type="search" placeholder="Search Location" name = "searched" required="required">
-<button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-</form>
-{% endblock %}
+{% extends "naturescall/base.html" %}
 
 {% block content %}
 <div class="container-fluid">
 	<div class= "row">
-		<div class="col-md-6">
-			<p>
-			<a class="btn btn-primary" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">Select filters</a>
-			</p>
-			<div class="collapse" id="collapseExample">
+		<div class="col-auto">
+			<button class="btn btn-primary mt-3 mb-3" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">Filters</button>
+			<div class="collapse mb-3" id="collapseExample">
 				<div class="card card-body">
 					<form class="form-inline my-2 my-lg-0" method="GET" enctype="multipart/form-data">
 						{% csrf_token %}
-				<!--		<fieldset class="form-group">
-				<input class="form-control mr-sm-2" type="search" placeholder="Search Location" name = "filtered" required="required"> -->
-							{{ tableFilter.form.as_p }}
-							<!--	</fieldset>-->
-						<button href="{% url 'naturescall:search_restroom'%}" class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+						{{tableFilter.form.as_p}}
+						<button href="{% url 'naturescall:search_restroom'%}" class="btn btn-outline-success my-2 my-sm-0 ml-auto" type="submit">Search</button>
 					</form>
 				</div>
 			</div>
 			{% if data %}
-			<h4>Please find your filtered search</h4>
+			<h4 style="color: white">Please find your filtered search</h4>
 			{% for d in data%}
-			<div class="card" style="width: 30rem;">
+			<div class="card mt-3 mb-3 border-0" style="width: 30rem;">
 				<img class="card-img-top" src={{d.image_url}} alt="Card image cap" style= "width:100%; height:15vw; object-fit: cover;">
 				<div class="card-body">
 					<h5 class="card-title">{{d.name}}</h5>
@@ -42,9 +29,9 @@
 			{% endfor %}
 			{% endif %}
 			{% if data1 %}
-			<h4> Unfiltered Result </h4>
+			<h4 style="color: white"> Unfiltered Result </h4>
 			{% for d in data1%}
-			<div class="card" style="width: 30rem;">
+			<div class="card mt-3 mb-3 border-0" style="width: 30rem;">
 				<img class="card-img-top" src={{d.image_url}} alt="Card image cap" style= "width:100%; height:15vw; object-fit: cover;">
 				<div class="card-body">
 					<h5 class="card-title">{{d.name}}</h5>
@@ -58,14 +45,16 @@
 				</div>
 			</div>
 			{% endfor %}
+			
+			{% endif %}
 		</div>
-		<div class="col-lg-6">
-			<img src={{map}} class="image">
+		{% if data or data1 %}
+		<div class="col-xl" style="background-image: url('{{map}}'); background-repeat: no-repeat; background-attachment: fixed; background-size: contain; background-position: right;">
 			{% load static %}
-			 <img src="{% static 'naturescall/legend2.jpg' %}" class="legend">
+			<img src="{% static 'naturescall/legend2.jpg' %}" class="legend float-right">
 		</div>
 		{% else %}
-		<h3>Location Not Found</h3>
+		<h3 class="mx-auto" style="color: white">Location Not Found</h3>
 		{% endif %}
 	</div>
 </div>

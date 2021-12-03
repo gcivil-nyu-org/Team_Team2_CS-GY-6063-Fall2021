@@ -26,6 +26,8 @@ urlpatterns = [
         views.comment_response,
         name="comment_response",
     ),
+    path("coupon_register/<int:r_id>", views.coupon_register, name="coupon_register"),
+    path("coupon_edit/<int:r_id>", views.coupon_edit, name="coupon_edit"),
 ]
 # urlpatterns += [
 #     path("accounts/", include("accounts.urls", namespace="accounts")),

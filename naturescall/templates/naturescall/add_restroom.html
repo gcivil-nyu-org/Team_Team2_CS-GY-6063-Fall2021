@@ -1,12 +1,7 @@
-
-{% extends  "naturescall/index.html" %}
-<!-- no search bar in the add_res page -->
-{% block form %}
-{% endblock %}
+{% extends "naturescall/base.html" %}
 
 {% block content %}
-<div class="container">
-{#	<h2>You are entering details for restroom {{name}}</h2>#}
+<div class="container ratings">
 	<h2>{{title}}</h2>
 	<form action="" method="POST">
 		{%csrf_token%}
