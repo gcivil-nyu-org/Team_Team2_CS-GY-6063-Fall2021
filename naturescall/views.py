@@ -419,7 +419,9 @@ def qr_confirm(request, c_id, u_id):
     current_user = get_object_or_404(User, id=u_id)
     current_restroom = current_coupon.cr_id.restroom_id
     res_title = current_restroom.title
+
     context = {"title": res_title, "description": current_coupon.description}
+
     # coupon = Coupon.objects.filter(id=c_id)[0]
     # user = User.objects.get(id=u_id)
     transaction = Transaction(coupon_id=current_coupon, user_id=current_user)
