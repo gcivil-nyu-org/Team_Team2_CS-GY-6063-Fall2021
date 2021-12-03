@@ -758,8 +758,7 @@ class ViewTests(TestCase):
         desc = "TEST DESCRIPTION"
         yelp_id = "E6h-sMLmF86cuituw5zYxw"
         rr = create_restroom(yelp_id, desc)
-        cr = ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
-        print(cr)
+        ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
         response = self.client.get(reverse("naturescall:coupon_register", args=(1,)))
         response2 = self.client.post(
             reverse("naturescall:coupon_register", args=(1,)),

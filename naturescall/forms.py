@@ -59,6 +59,10 @@ class ClaimRestroom(forms.Form):
     claim = forms.CheckboxInput()
 
 
+class FlagComment(forms.Form):
+    flag = forms.BooleanField(label="Flag This Comment?")
+
+
 class addCoupon(forms.ModelForm):
     description = forms.CharField(widget=forms.TextInput(attrs={"size": 80}))
 

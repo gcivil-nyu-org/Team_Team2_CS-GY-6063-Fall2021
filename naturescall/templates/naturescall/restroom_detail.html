@@ -93,6 +93,7 @@
                 &emsp;Owner reply:<br>
                 &emsp;{{ rating.response }}<br>
                 {% endif %}
+                <a href="{% url 'naturescall:flag_comment' rating.id %}" class="btn btn-danger btn-sm">Flag</a>
                 <br>
             </p>
         </div>

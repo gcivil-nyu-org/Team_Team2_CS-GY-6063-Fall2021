@@ -1,10 +1,10 @@
-from naturescall.models import Restroom, Rating, ClaimedRestroom, Coupon, Transaction
+from naturescall.models import Restroom, Rating, ClaimedRestroom, Coupon, Transaction, Flag
 from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponseRedirect, Http404
 
 # from .forms import LocationForm
-from .forms import AddRestroom, AddRating, ClaimRestroom, CommentResponse, addCoupon
+from .forms import AddRestroom, AddRating, ClaimRestroom, CommentResponse, addCoupon, FlagComment
 import requests
 from django.contrib.auth.decorators import login_required
 from .filters import RestroomFilter
@@ -384,15 +384,9 @@ def hasCoupon(restroom_id):
 
 @login_required(login_url="login")
 def get_qr(request, c_id):
-    # restroom = ClaimedRestroom.objects.filter(
-    #     id=Coupon.objects.filter(id=c_id)[0].cr_id.id
-    # )[0].restroom_id
     current_coupon = get_object_or_404(Coupon, id=c_id)
     current_restroom = current_coupon.cr_id.restroom_id
     res_title = current_restroom.title
-    # r_id = restroom.id
-    # querySet = Restroom.objects.filter(id=r_id)
-    # res_title = querySet.values()[0]["title"]
     # url_string = "http://127.0.0.1:8000/qr_confirm/"
     # + str(c_id) +'/' + str(request.user.id)
     # url_string = request.build_absolute_uri() + "/qr_confirm/"
@@ -574,6 +568,24 @@ def comment_response(request, rating_id):
     }
     return render(request, "naturescall/comment_response.html", context)
 
+
+@login_required
+def flag_comment(request, rating_id):
+    current_rating = get_object_or_404(Rating, id=rating_id)
+    current_restroom = current_rating.restroom_id
+    current_user = request.user
+    headline = current_rating.headline
+    comment = current_rating.comment
+    if request.method == "POST":
+        form = FlagComment(request.POST)
+        if form.is_valid():
+            flag = Flag(rating_id=current_rating, user_id=current_user)
+            flag.save()
+            return redirect("naturescall:restroom_detail", r_id=current_restroom.id)
+    else:
+        form = FlagComment()
+    context = {"form": form, "headline": headline, "comment": comment, "r_id": current_restroom.id}
+    return render(request, "naturescall/flag_comment.html", context)
 
 # Helper function: make an API request
 def request(host, path, api_key, url_params=None):
