@@ -44,7 +44,7 @@
                     <i class="material-icons">child_friendly</i>
                 {% endif %}
                 {% if res.yelp_data.transaction_not_required  %}
-                    <i class="material-icons">attach_money</i>
+                    <i class="material-icons">money_off</i>
                 {% endif %}
                 {% if is_first_time_rating %}
                     <a href="{% url 'naturescall:rate_restroom' res.yelp_data.db_id %}" class="btn btn-success">Rate Now!</a>

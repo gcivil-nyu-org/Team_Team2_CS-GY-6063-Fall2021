@@ -5,6 +5,19 @@ body {
     background-size: 100%;
 }
 
+a {
+    color: #2cdf33;
+}
+
+a:hover {
+    color: green;
+}
+
+.material-icons {
+    display: inline-flex;
+    vertical-align: middle;
+}
+
 .ratings {
     color: white;
     text-shadow: 2px 2px black;
