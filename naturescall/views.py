@@ -1,10 +1,24 @@
-from naturescall.models import Restroom, Rating, ClaimedRestroom, Coupon, Transaction, Flag
+from naturescall.models import (
+    Restroom,
+    Rating,
+    ClaimedRestroom,
+    Coupon,
+    Transaction,
+    Flag,
+)
 from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponseRedirect, Http404
 
 # from .forms import LocationForm
-from .forms import AddRestroom, AddRating, ClaimRestroom, CommentResponse, addCoupon, FlagComment
+from .forms import (
+    AddRestroom,
+    AddRating,
+    ClaimRestroom,
+    CommentResponse,
+    addCoupon,
+    FlagComment,
+)
 import requests
 from django.contrib.auth.decorators import login_required
 from .filters import RestroomFilter
@@ -322,12 +336,10 @@ def restroom_detail(request, r_id):
 
     # determine if claim button should be shown
     coupon_id = -1
-    show_claim = True
     has_coupon = False
 
     # should not be shown to an unauthenticated user
-    if not current_user.is_authenticated:
-        show_claim = False
+    show_claim = current_user.is_authenticated
     # should not be shown if any user has a verified claim
     # should not be shown if this user has a previous unverified claim
 
@@ -340,6 +352,15 @@ def restroom_detail(request, r_id):
                 coupon_id = hasCoupon(claim.id)
 
     ratings = Rating.objects.filter(restroom_id=r_id)
+    ratings_flags = []
+    for rating in ratings:
+        show_flag = True
+        prev_flag = Flag.objects.filter(user_id=current_user, rating_id=rating).exists()
+        # entry = Entry.objects.get(pk=123)
+        # if some_queryset.filter(pk=entry.pk).exists():
+        if rating.user_id == current_user or prev_flag:
+            show_flag = False
+        ratings_flags.append((rating, show_flag))
 
     # determine if the rate button should display "Rate" or "Edit"
     if current_user.is_authenticated:
@@ -371,6 +392,7 @@ def restroom_detail(request, r_id):
         "has_coupon": has_coupon,
         "coupon_id": coupon_id,
         "is_first_time_rating": is_first_time_rating,
+        "ratings_flags": ratings_flags,
     }
     return render(request, "naturescall/restroom_detail.html", context)
 
@@ -574,6 +596,10 @@ def flag_comment(request, rating_id):
     current_rating = get_object_or_404(Rating, id=rating_id)
     current_restroom = current_rating.restroom_id
     current_user = request.user
+    if current_rating.user_id == current_user:
+        raise Http404("You cannot flag your own comment!")
+    if Flag.objects.filter(user_id=current_user, rating_id=current_rating).exists():
+        raise Http404("You've already flagged this comment!")
     headline = current_rating.headline
     comment = current_rating.comment
     if request.method == "POST":
@@ -584,8 +610,14 @@ def flag_comment(request, rating_id):
             return redirect("naturescall:restroom_detail", r_id=current_restroom.id)
     else:
         form = FlagComment()
-    context = {"form": form, "headline": headline, "comment": comment, "r_id": current_restroom.id}
+    context = {
+        "form": form,
+        "headline": headline,
+        "comment": comment,
+        "r_id": current_restroom.id,
+    }
     return render(request, "naturescall/flag_comment.html", context)
+
 
 # Helper function: make an API request
 def request(host, path, api_key, url_params=None):

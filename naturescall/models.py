@@ -68,4 +68,7 @@ class Flag(models.Model):
     rating_id = models.ForeignKey(Rating, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"User: {self.user_id_id} Comment: {self.rating_id_id}"
+        return (
+            f"Comment: {self.rating_id_id} Author: {self.rating_id.user_id_id} "
+            f"Flagger: {self.user_id_id}"
+        )
