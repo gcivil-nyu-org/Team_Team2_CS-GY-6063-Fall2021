@@ -70,6 +70,23 @@ def search_restroom(request):
                         restroom["db_id"] = ""
                     else:
                         restroom["db_id"] = querySet.values()[0]["id"]
+                        restroom["accessible"] = querySet.values()[0]["accessible"]
+                        restroom["family_friendly"] = querySet.values()[0][
+                            "family_friendly"
+                        ]
+                        restroom["transaction_not_required"] = querySet.values()[0][
+                            "transaction_not_required"
+                        ]
+                        qS = ClaimedRestroom.objects.filter(
+                            restroom_id_id=restroom["db_id"]
+                        )
+                        if qS:
+                            claimedRestroom = qS.values()[0]["id"]
+                            q = Coupon.objects.filter(cr_id_id=claimedRestroom)
+                            if q:
+                                restroom["coupon"] = True
+                        else:
+                            restroom["coupon"] = False
                     addr = str(restroom["location"]["display_address"])
                     restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
                 url = str(
@@ -113,11 +130,29 @@ def search_restroom(request):
                         restroom["db_id"] = ""
                     else:
                         restroom["db_id"] = querySet.values()[0]["id"]
+                        restroom["accessible"] = querySet.values()[0]["accessible"]
+                        restroom["family_friendly"] = querySet.values()[0][
+                            "family_friendly"
+                        ]
+                        restroom["transaction_not_required"] = querySet.values()[0][
+                            "transaction_not_required"
+                        ]
+                        qS = ClaimedRestroom.objects.filter(
+                            restroom_id_id=restroom["db_id"]
+                        )
+                        if qS:
+                            claimedRestroom = qS.values()[0]["id"]
+                            q = Coupon.objects.filter(cr_id_id=claimedRestroom)
+                            if q:
+                                restroom["coupon"] = True
+                        else:
+                            restroom["coupon"] = False
                     addr = str(restroom["location"]["display_address"])
                     restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
                 id_obj_pairs = {}
                 for obj in tableFilter.qs:
                     id = obj.id
+                    print(id)
                     id_obj_pairs[id] = obj
                 for restroom in data1:
                     if restroom["db_id"] in id_obj_pairs:
@@ -169,6 +204,23 @@ def search_restroom(request):
                     restroom["db_id"] = ""
                 else:
                     restroom["db_id"] = querySet.values()[0]["id"]
+                    restroom["accessible"] = querySet.values()[0]["accessible"]
+                    restroom["family_friendly"] = querySet.values()[0][
+                        "family_friendly"
+                    ]
+                    restroom["transaction_not_required"] = querySet.values()[0][
+                        "transaction_not_required"
+                    ]
+                    qS = ClaimedRestroom.objects.filter(
+                        restroom_id_id=restroom["db_id"]
+                    )
+                    if qS:
+                        claimedRestroom = qS.values()[0]["id"]
+                        q = Coupon.objects.filter(cr_id_id=claimedRestroom)
+                        if q:
+                            restroom["coupon"] = True
+                    else:
+                        restroom["coupon"] = False
                 addr = str(restroom["location"]["display_address"])
                 restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
             id_obj_pairs = {}
