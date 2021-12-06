@@ -394,7 +394,7 @@ def restroom_detail(request, r_id):
     show_claim = current_user.is_authenticated
     # should not be shown if any user has a verified claim
     # should not be shown if this user has a previous unverified claim
-
+    coupon_description = ''
     all_claims = ClaimedRestroom.objects.filter(restroom_id=current_restroom)
     for claim in all_claims:
         if claim.verified or claim.user_id == current_user:
@@ -402,6 +402,9 @@ def restroom_detail(request, r_id):
             if hasCoupon(claim.id) != -1:
                 has_coupon = True
                 coupon_id = hasCoupon(claim.id)
+                coupon_entry = Coupon.objects.filter(id = coupon_id)[0]
+                coupon_description = coupon_entry.description
+
 
     ratings = Rating.objects.filter(restroom_id=r_id)
     ratings_flags = []
@@ -445,6 +448,7 @@ def restroom_detail(request, r_id):
         "coupon_id": coupon_id,
         "is_first_time_rating": is_first_time_rating,
         "ratings_flags": ratings_flags,
+        "coupon_description" : coupon_description, 
     }
     return render(request, "naturescall/restroom_detail.html", context)
 
