@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.messages import get_messages
-from .models import Restroom, Rating, ClaimedRestroom, Coupon
+from .models import Restroom, Rating, ClaimedRestroom, Coupon, Flag
 from .filters import RestroomFilter
 import os
 from django.contrib import auth
@@ -834,3 +834,104 @@ class ViewTests(TestCase):
         self.assertEqual(coupon_new.description, "hello")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response2.status_code, 302)
+
+    def test_coupon_no_valid_claim(self):
+        """
+        If a restroom has not been claimed, no coupon page should be
+        accessible
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        create_restroom(yelp_id, desc)
+        response = self.client.get(reverse("naturescall:coupon_register", args=(1,)))
+        response1 = self.client.get(reverse("naturescall:coupon_edit", args=(1,)))
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response1.status_code, 404)
+
+    def test_flagging_own_comment(self):
+        """
+        A user cannot flag their own comment
+        """
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        Rating.objects.create(
+            restroom_id=rr,
+            user_id=user,
+            rating="4",
+            headline="headline1",
+            comment="comment1",
+        )
+        response = self.client.get(reverse("naturescall:flag_comment", args=(1,)))
+        self.assertEqual(response.status_code, 404)
+
+    def test_flagging_comment(self):
+        """
+        Once a restroom has been rated, another user can flag the comment
+        """
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        Rating.objects.create(
+            restroom_id=rr,
+            user_id=user,
+            rating="4",
+            headline="headline1",
+            comment="comment1",
+        )
+        user1 = User.objects.create_user("Jon1", "jon1@email.com")
+        self.client.force_login(user=user1)
+        response = self.client.get(reverse("naturescall:flag_comment", args=(1,)))
+        self.assertEqual(response.status_code, 200)
+
+    def test_flagging_comment_via_form(self):
+        """
+        Once a restroom has been rated, another user can flag the comment
+        via the form
+        """
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        Rating.objects.create(
+            restroom_id=rr,
+            user_id=user,
+            rating="4",
+            headline="headline1",
+            comment="comment1",
+        )
+        user1 = User.objects.create_user("Jon1", "jon1@email.com")
+        self.client.force_login(user=user1)
+        response = self.client.post(
+            reverse("naturescall:flag_comment", args=(1,)), data={"flag": True}
+        )
+        self.assertEqual(response.status_code, 302)
+
+    def test_flagging_comment_again(self):
+        """
+        Once a restroom has been rated, the same user can't flag it again
+        """
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        rating = Rating.objects.create(
+            restroom_id=rr,
+            user_id=user,
+            rating="4",
+            headline="headline1",
+            comment="comment1",
+        )
+        user1 = User.objects.create_user("Jon1", "jon1@email.com")
+        self.client.force_login(user=user1)
+        Flag.objects.create(user_id=user1, rating_id=rating)
+        response = self.client.get(reverse("naturescall:flag_comment", args=(1,)))
+        self.assertEqual(response.status_code, 404)
