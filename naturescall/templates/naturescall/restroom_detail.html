@@ -78,20 +78,23 @@
 
 <div class="container">
     <h2 style="color: white; text-shadow: 2px 2px black;">Ratings</h2>
-    {% for rating in ratings %}
+    {% for rf in ratings_flags %}
     <div class="card text-white mb-3" style="background-color: rgba(0,0,0,0.5)">
         <div class="card-body">
-            <h4>{{rating.user_id}}</h4>
+            <h4>{{rf.0.user_id}}</h4>
             <p>
-                Rating: {{rating.rating}}<br>
-                Headline: {{rating.headline}}<br>
+                Rating: {{rf.0.rating}}<br>
+                Headline: {{rf.0.headline}}<br>
                 <br>
                 Comment: <br>
-                {{rating.comment}}<br>
-                {% if rating.response %}
+                {{rf.0.comment}}<br>
+                {% if rf.0.response %}
                 <br>
                 &emsp;Owner reply:<br>
-                &emsp;{{ rating.response }}<br>
+                &emsp;{{ rf.0.response }}<br>
+                {% endif %}
+                {% if rf.1 %}
+                <a href="{% url 'naturescall:flag_comment' rf.0.id %}" class="btn btn-danger btn-sm">Flag</a>
                 {% endif %}
                 <br>
             </p>
