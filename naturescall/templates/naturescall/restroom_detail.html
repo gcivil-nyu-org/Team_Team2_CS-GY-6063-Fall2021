@@ -6,6 +6,9 @@
 .checked {
     color: orange;
 }
+.txt-shadow {
+    text-shadow: 2px 2px black;
+}
 </style>
 {% endblock %}
 
@@ -68,10 +71,10 @@
                 {% endif %}
                 {% endfor %}
                 {{rating}}
-                <h4 class="card-text" style="text-shadow: 2px 2px black;">{{res.addr}}</h4>
+                <h4 class="card-text txt-shadow">{{res.addr}}</h4>
                 <br>
-                <h4 class="card-text" style="text-shadow: 2px 2px black;">Description:</h4>
-                <p class="card-text" style="text-shadow: 2px 2px black;">{{res.desc}}</p>
+                <h4 class="card-text txt-shadow">Description:</h4>
+                <h5 class="card-text txt-shadow">{{res.desc}}</h5>
         </div>
     </div>
 </div>

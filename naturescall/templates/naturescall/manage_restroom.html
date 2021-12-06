@@ -7,15 +7,6 @@
 {% block content %}
 <div class="container ratings">
     <h1>{{ title }}</h1>
-    {% if messages %}
-    <div class="alert alert-success" role="alert">
-        <ul class="messages">
-            {% for message in messages %}
-            <h4{% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</h4>
-                {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
     <a href="{% url 'naturescall:add_restroom' yelp_id %}" class="btn btn-success btn-lg my-2 mx-auto" role="button">
         <i class="material-icons">mode_edit</i>
         Modify Description and Amenities
