@@ -61,3 +61,14 @@ class Transaction(models.Model):
     coupon_id = models.ForeignKey(Coupon, on_delete=models.RESTRICT)
     user_id = models.ForeignKey(User, on_delete=models.RESTRICT)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+
+class Flag(models.Model):
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating_id = models.ForeignKey(Rating, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return (
+            f"Comment: {self.rating_id_id} Author: {self.rating_id.user_id_id} "
+            f"Flagger: {self.user_id_id}"
+        )

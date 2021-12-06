@@ -86,7 +86,8 @@ def view_profile(request):
             return HttpResponseRedirect(reverse("naturescall:index"))
     else:
         u_form = UserUpdateForm(
-            instance=request.user, initial={"username": request.user.username},
+            instance=request.user,
+            initial={"username": request.user.username},
         )
         p_form = ProfileUpdateForm(instance=request.user.profile)
     current_user = request.user
