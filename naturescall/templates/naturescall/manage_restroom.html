@@ -1,32 +1,30 @@
 {% extends "naturescall/base.html" %}
 
+{% block style %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+{% endblock %}
+
 {% block content %}
 <div class="container ratings">
     <h1>{{ title }}</h1>
-    <h2>Manage This Restroom!!!</h2>
-{% if messages %}
-    <div class="alert alert-success" role="alert">
-        <ul class="messages">
-            {% for message in messages %}
-                <h4{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</h4>
-            {% endfor %}
-        </ul>
-    </div>
-{% endif %}
-<ul>
-    <li>
-        <a href="{% url 'naturescall:add_restroom' yelp_id %}">Modify Description and Amenities</a>
-    </li>
-    <li>
-        <a href="{% url 'naturescall:comment_responses' r_id %}">Respond to User Comments</a>
-    </li>
-    <li>
-        {% if hasCoupon %}
-          <a href="{% url 'naturescall:coupon_edit' r_id %}">edit coupon</a>
-        {% else %}
-          <a href="{% url 'naturescall:coupon_register' r_id %}">register coupon</a>
-        {% endif %}
-    </li>
-</ul>
+    <a href="{% url 'naturescall:add_restroom' yelp_id %}" class="btn btn-success btn-lg my-2 mx-auto" role="button">
+        <i class="material-icons">mode_edit</i>
+        Modify Description and Amenities
+    </a><br>
+    <a href="{% url 'naturescall:comment_responses' r_id %}" class="btn btn-success btn-lg my-2 mx-auto" role="button">
+        <i class="material-icons">mode_comment</i>
+        Respond to User Comments
+    </a><br>
+    {% if hasCoupon %}
+    <a href="{% url 'naturescall:coupon_edit' r_id %}" class="btn btn-success btn-lg my-2 mx-auto" role="button">
+        <i class="fa fa-qrcode"></i> 
+        Edit Coupon
+    </a>    {% else %}
+    <a href="{% url 'naturescall:coupon_register' r_id %}" class="btn btn-success btn-lg my-2 mx-auto" role="button">
+        <i class="material-icons">mode_edit</i>
+        <i class="fa fa-qrcode"></i> 
+    </a>
+    {% endif %}
+    <br>
 </div>
 {% endblock %}
