@@ -72,6 +72,11 @@
                 <br>
                 <h4 class="card-text" style="text-shadow: 2px 2px black;">Description:</h4>
                 <p class="card-text" style="text-shadow: 2px 2px black;">{{res.desc}}</p>
+                {% if has_coupon %}
+                <h4 class="card-text" style="text-shadow: 2px 2px black;">Coupon:</h4>
+                <p class="card-text" style="text-shadow: 2px 2px black;">{{coupon_description}}</p>
+                {% endif %}
+
         </div>
     </div>
 </div>
