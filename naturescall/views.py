@@ -166,7 +166,6 @@ def search_restroom(request):
                 id_obj_pairs = {}
                 for obj in tableFilter.qs:
                     id = obj.id
-                    print(id)
                     id_obj_pairs[id] = obj
                 for restroom in data1:
                     if restroom["db_id"] in id_obj_pairs:
@@ -394,7 +393,7 @@ def restroom_detail(request, r_id):
     show_claim = current_user.is_authenticated
     # should not be shown if any user has a verified claim
     # should not be shown if this user has a previous unverified claim
-    coupon_description = ''
+    coupon_description = ""
     all_claims = ClaimedRestroom.objects.filter(restroom_id=current_restroom)
     for claim in all_claims:
         if claim.verified or claim.user_id == current_user:
@@ -402,19 +401,21 @@ def restroom_detail(request, r_id):
             if hasCoupon(claim.id) != -1:
                 has_coupon = True
                 coupon_id = hasCoupon(claim.id)
-                coupon_entry = Coupon.objects.filter(id = coupon_id)[0]
+                coupon_entry = Coupon.objects.filter(id=coupon_id)[0]
                 coupon_description = coupon_entry.description
-
 
     ratings = Rating.objects.filter(restroom_id=r_id)
     ratings_flags = []
     for rating in ratings:
-        show_flag = True
-        prev_flag = Flag.objects.filter(user_id=current_user, rating_id=rating).exists()
-        # entry = Entry.objects.get(pk=123)
-        # if some_queryset.filter(pk=entry.pk).exists():
-        if rating.user_id == current_user or prev_flag:
-            show_flag = False
+        # anonymous users should not see the flag button
+        show_flag = current_user.is_authenticated
+        if show_flag:
+            prev_flag = Flag.objects.filter(
+                user_id=current_user, rating_id=rating
+            ).exists()
+            # users can't flag their own comment or comments they've previously flagged
+            if rating.user_id == current_user or prev_flag:
+                show_flag = False
         ratings_flags.append((rating, show_flag))
 
     # determine if the rate button should display "Rate" or "Edit"
@@ -448,7 +449,7 @@ def restroom_detail(request, r_id):
         "coupon_id": coupon_id,
         "is_first_time_rating": is_first_time_rating,
         "ratings_flags": ratings_flags,
-        "coupon_description" : coupon_description, 
+        "coupon_description": coupon_description,
     }
     return render(request, "naturescall/restroom_detail.html", context)
 
