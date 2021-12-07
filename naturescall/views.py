@@ -53,6 +53,10 @@ def index(request):
     # context["form"] = form
     return render(request, "naturescall/home.html", context)
 
+def about_page(request):
+    context = {}
+    return render(request, "naturescall/about_page.html", context)
+
 
 # The search page for the user to enter address, search for and
 # display the restrooms around the location
