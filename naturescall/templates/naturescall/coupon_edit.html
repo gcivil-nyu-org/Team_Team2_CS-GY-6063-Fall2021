@@ -1,15 +1,12 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <title></title>
-  </head>
-  <body>
-    <p>Please register your coupon by filling the coupon description</p>
-    <form action="" method="POST">
-    		{%csrf_token%}
-    		{{form.as_p}}
-    		<input type= "submit" value = "Edit Coupon">
-    </form>
-  </body>
-</html>
+{% extends "naturescall/base.html" %}
+
+{% block content %}
+<div class="container ratings">
+  <p>Edit your coupon</p>
+  <form action="" method="POST">
+      {%csrf_token%}
+      {{form.as_p}}
+      <input class="btn btn-success" type="submit" value = "Edit Coupon">
+  </form>
+</div>
+{% endblock %}
