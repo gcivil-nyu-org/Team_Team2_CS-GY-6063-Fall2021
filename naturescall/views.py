@@ -53,6 +53,8 @@ def index(request):
     # context["form"] = form
     return render(request, "naturescall/home.html", context)
 
+
+# The about page
 def about_page(request):
     context = {}
     return render(request, "naturescall/about_page.html", context)
@@ -406,9 +408,8 @@ def restroom_detail(request, r_id):
             if hasCoupon(claim.id) != -1:
                 has_coupon = True
                 coupon_id = hasCoupon(claim.id)
-                coupon_entry = Coupon.objects.filter(id = coupon_id)[0]
+                coupon_entry = Coupon.objects.filter(id=coupon_id)[0]
                 coupon_description = coupon_entry.description
-
 
     ratings = Rating.objects.filter(restroom_id=r_id)
     ratings_flags = []
@@ -452,7 +453,7 @@ def restroom_detail(request, r_id):
         "coupon_id": coupon_id,
         "is_first_time_rating": is_first_time_rating,
         "ratings_flags": ratings_flags,
-        "coupon_description" : coupon_description, 
+        "coupon_description": coupon_description,
     }
     return render(request, "naturescall/restroom_detail.html", context)
 
