@@ -448,7 +448,7 @@ def restroom_detail(request, r_id):
         "coupon_id": coupon_id,
         "is_first_time_rating": is_first_time_rating,
         "ratings_flags": ratings_flags,
-        "coupon_description" : coupon_description, 
+        "coupon_description" : coupon_description,
     }
     return render(request, "naturescall/restroom_detail.html", context)
 
@@ -524,6 +524,12 @@ def claim_restroom(request, r_id):
     context = {"form": form, "title": current_restroom.title}
     return render(request, "naturescall/claim_restroom.html", context)
 
+@login_required
+def admin_page(request):
+    current_user = request.user
+    if current_user.username != "admin":
+        raise Http404("Access Denied!!!")
+    return render(request, "naturescall/admin_page.html")
 
 @login_required
 def manage_restroom(request, r_id):

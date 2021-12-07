@@ -33,6 +33,7 @@ urlpatterns = [
         views.flag_comment,
         name="flag_comment",
     ),
+    path("admin_page/", views.admin_page, name="admin_page"),
 ]
 # urlpatterns += [
 #     path("accounts/", include("accounts.urls", namespace="accounts")),

@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="container ratings">
-	
+
 	<h2>User-Profile</h2>
 	<form method="POST" enctype="multipart/form-data">
 		{% csrf_token %}
@@ -13,7 +13,7 @@
 		</fieldset>
 		<input class="btn btn-success" type="submit" value="Update">
 	</form>
-	
+
 </div>
 {% if claims %}
 <div class="container ratings">
@@ -61,4 +61,13 @@
 			{% endfor %}
 	</div>
 </div>
+{% if is_admin %}
+<div class="container ratings">
+		<br>
+		<h3>Business_Stats_Page</h3>
+		<div class="card">
+			<a href="{% url 'naturescall:admin_page' %}" style="color: rgb(40, 180, 40); text-shadow: 0px 0px;">Stats_Page</a>
+	</div>
+</div>
+{% endif %}
 {% endblock %}
