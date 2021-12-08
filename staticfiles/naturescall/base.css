@@ -13,13 +13,26 @@ a:hover {
     color: green;
 }
 
+.dropdown-menu {
+    background-color: rgba(0,0,0,0.5);
+}
+
+.dropdown-item {
+    color: white;
+}
+
+.dropdown-item:hover {
+    color: white;
+    background-color: rgba(32,32,32,0.5);
+}
+
 .material-icons {
     display: inline-flex;
     vertical-align: middle;
 }
 
-.ratings {
+.white-center-shadow {
     color: white;
-    text-shadow: 2px 2px black;
     text-align: center;
+    text-shadow: 2px 2px black;
 }

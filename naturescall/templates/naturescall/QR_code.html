@@ -2,14 +2,10 @@
 {% load qr_code %}
 
 {% block content %}
-<div class="container ratings">
+<div class="container white-center-shadow">
   <div class="jumbotron bg-success text-white" >
     <h1>Hello {{user}}, Welcome to {{title}} !</h1>
     <div class="col d-flex justify-content-center">
-
-        <!--
-        <img src="{% qr_url_from_text "https://team2naturescalldev.herokuapp.com" image_format='png'  cache_enabled=False %}" alt="Hello World!">
-        -->
         {% qr_from_text url image_format='png'%}
     </div>
   </div>
