@@ -19,10 +19,11 @@
     <a href="{% url 'naturescall:coupon_edit' r_id %}" class="btn btn-success btn-lg my-2 mx-auto" role="button">
         <i class="fa fa-qrcode"></i> 
         Edit Coupon
-    </a>    {% else %}
+    </a>
+    {% else %}
     <a href="{% url 'naturescall:coupon_register' r_id %}" class="btn btn-success btn-lg my-2 mx-auto" role="button">
-        <i class="material-icons">mode_edit</i>
-        <i class="fa fa-qrcode"></i> 
+        <i class="fa fa-plus"></i>
+        Create Coupon 
     </a>
     {% endif %}
     <br>

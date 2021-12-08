@@ -282,7 +282,7 @@ def rate_restroom(request, r_id):
             if rating_set:
                 entry.id = rating_set[0].id
             entry.save()
-            msg = "Congratulations, Your rating has been saved!"
+            msg = "Congratulations, your rating has been saved!"
             messages.success(request, f"{msg}")
             if request.session["referer"] and "profile" in request.session["referer"]:
                 return redirect("accounts:profile")
@@ -573,7 +573,7 @@ def coupon_register(request, r_id):
             return redirect("naturescall:manage_restroom", r_id=current_restroom.id)
     else:
         form = addCoupon()
-        context = {"form": form}
+        context = {"form": form, "restroom": current_restroom}
         return render(request, "naturescall/coupon_register.html", context)
 
 
@@ -596,8 +596,8 @@ def coupon_edit(request, r_id):
             messages.success(request, f"{msg}")
             return redirect("naturescall:manage_restroom", r_id=current_restroom.id)
     else:
-        form = addCoupon()
-        context = {"form": form}
+        form = addCoupon(instance=coupon)
+        context = {"form": form, "restroom": current_restroom}
         return render(request, "naturescall/coupon_edit.html", context)
 
 

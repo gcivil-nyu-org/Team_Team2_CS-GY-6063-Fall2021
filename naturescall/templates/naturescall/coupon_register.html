@@ -2,11 +2,12 @@
 
 {% block content %}
 <div class="container white-center-shadow">
-  <p>Please register your coupon by filling the coupon description</p>
+  <h5>Register coupon for</h5>
+  <h2>{{restroom.title}}</h2>
   <form action="" method="POST">
       {%csrf_token%}
       {{form.as_p}}
-      <input type= "submit" value = "Register Coupon">
+      <input class="btn btn-success" type="submit" value="Done">
   </form>
 </div>
 {% endblock %}
