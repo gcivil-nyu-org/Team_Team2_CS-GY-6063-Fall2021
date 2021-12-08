@@ -1,17 +1,32 @@
 {% extends "naturescall/base.html" %}
 
+{% block style %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+    span {
+        color: rgb(150,150,150);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container ratings">
+<div class="container white-center-shadow">
     <h2>{{title}}</h2>
     <h4>Responses to User Comments</h4>
     {% for rating in ratings %}
     <div class="container mb-3 py-3" style="background-color: rgba(0,0,0,0.5);">
-        <h4>{{rating.user_id}}</h4>
-        Rating: {{rating.rating}}<br>
-        Headline: {{rating.headline}}<br>
-        Comment: {{rating.comment}}<br>
-        Current Response: {{ rating.response }}<br>
-        <a href="{% url 'naturescall:comment_response' rating.id %}" style="color: greenyellow">Update Response</a>
+        <h4>{{rating.headline}}</h4>
+        <i class="material-icons">person</i>
+        <i>{{rating.user_id}}</i><br><br>
+        <span>Rating:</span>
+        {{rating.rating}}<br><br>
+        <span><i class="material-icons">mode_comment</i>Comment:</span><br>
+        {{rating.comment}}<br><br>
+        <span><i class="material-icons">mode_comment</i>Your Response:</span><br>
+        {{ rating.response }}
+        <a href="{% url 'naturescall:comment_response' rating.id %}">
+            <i class="fa fa-edit"></i>
+        </a>
         <br>
     </div>
     {% endfor %}

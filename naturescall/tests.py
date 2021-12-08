@@ -2,9 +2,10 @@ from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.messages import get_messages
-from .models import Restroom, Rating, ClaimedRestroom, Coupon
+from .models import Restroom, Rating, ClaimedRestroom, Coupon, Flag
 from .filters import RestroomFilter
 import os
+from django.contrib import auth
 
 api_key = str(os.getenv("yelp_key"))
 
@@ -19,6 +20,18 @@ def create_restroom(yelp_id, desc):
     left at their default values
     """
     return Restroom.objects.create(yelp_id=yelp_id, description=desc)
+
+
+def create_Coupon(self):
+    user = User.objects.create_user("Jon", "jon@email.com")
+    self.client.force_login(user=user)
+    desc = "TEST DESCRIPTION"
+    yelp_id = "FkA9aoMhWO4XKFMTuTnl4Q"
+    rr = Restroom.objects.create(yelp_id=yelp_id, description=desc, accessible=True)
+    cr = ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+    coupon = Coupon.objects.create(cr_id=cr, description=desc)
+    self.client.logout()
+    return coupon
 
 
 class ViewTests(TestCase):
@@ -349,6 +362,9 @@ class ViewTests(TestCase):
 
     def test_unauthenticated_user_search_restroom(self):
         """testing search result for unauthenticated user"""
+        create_Coupon(self)
+        user = auth.get_user(self.client)
+        self.assertEqual(user.is_authenticated, False)
         response = self.client.get(
             reverse("naturescall:search_restroom"),
             data={"searched": "washigton square park"},
@@ -358,46 +374,57 @@ class ViewTests(TestCase):
 
     def test_unauthenticated_filter_search_restroom(self):
         """Testing filter search for unauthenticated user"""
-        yelp_id = "FkA9aoMhWO4XKFMTuTnl4Q"
-        desc = "TEST Accessibile= true"
+        create_Coupon(self)
+        user = auth.get_user(self.client)
+        self.assertEqual(user.is_authenticated, False)
+        # yelp_id = "FkA9aoMhWO4XKFMTuTnl4Q"
+        # desc = "TEST Accessibile= true"
+        Restroom.objects.create(yelp_id="6FIzpXy82HBT3KZaiA38-Q", description="test")
         session = self.client.session
         session["search_location"] = "washigton square park"
         session.save()
-        Restroom.objects.create(yelp_id=yelp_id, description=desc, accessible="True")
+        # rr= Restroom.objects.all()
+        # Restroom.objects.create(yelp_id='6FIzpXy82HBT3KZaiA38-Q', description='test')
         data = {
             "location": session["search_location"],
-            "accessible": "True",
-            "family_friendly": "False",
-            "transaction_not_required": "False",
+            "accessible": True,
+            "family_friendly": False,
+            "transaction_not_required": False,
         }
         response = self.client.get(reverse("naturescall:search_restroom"), data=data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["data"]), 1)
+        self.assertEqual(response.context["data"][0]["coupon"], True)
         self.assertEqual(len(response.context["data1"]), 19)
+        self.assertEqual(response.context["data1"][0]["coupon"], False)
 
     def test_authenticated_user_search_restroom(self):
         """testing search result for authenticated user"""
-        yelp_id = "FkA9aoMhWO4XKFMTuTnl4Q"
-        desc = "TEST Accessibile= true"
+        # yelp_id = "FkA9aoMhWO4XKFMTuTnl4Q"
+        # desc = "TEST Accessibile= true"
+        create_Coupon(self)
+        user = auth.get_user(self.client)
+        self.assertEqual(user.is_authenticated, False)
+        Restroom.objects.create(yelp_id="6FIzpXy82HBT3KZaiA38-Q", description="test")
         user = User.objects.create_user("Howard", "howard@gmail.com")
         self.client.force_login(user=user)
+        self.assertEqual(user.is_authenticated, True)
         self.client.post(
             reverse("accounts:profile"),
             data={
-                "email": "Hao@gmail.com",
-                "profilename": "Howard",
+                "username": "Howard",
                 "accessible": "True",
                 "family_friendly": "False",
                 "transaction_not_required": "False",
             },
         )
-
-        Restroom.objects.create(yelp_id=yelp_id, description=desc, accessible="True")
-        data = {"searched": "washigton square park"}
-        response = self.client.get(reverse("naturescall:search_restroom"), data=data)
+        data1 = {"searched": "washigton square park"}
+        response = self.client.get(reverse("naturescall:search_restroom"), data=data1)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["data"]), 1)
+        self.assertEqual(response.context["data"][0]["coupon"], True)
         self.assertEqual(len(response.context["data1"]), 19)
+        self.assertEqual(response.context["data1"][0]["coupon"], False)
 
     def test_newly_created_restroom_with_no_rating(self):
         """
@@ -763,7 +790,167 @@ class ViewTests(TestCase):
         rr = create_restroom(yelp_id, desc)
         cr = ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
         coupon = Coupon.objects.create(cr_id=cr, description=desc)
-        coupon
+        coupon.description = "desc"
         response = self.client.get(reverse("naturescall:restroom_detail", args=(1,)))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["has_coupon"], True)
+
+    def test_coupon_register(self):
+        """
+        Test case for registering coupon
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+        response = self.client.get(reverse("naturescall:coupon_register", args=(1,)))
+        response2 = self.client.post(
+            reverse("naturescall:coupon_register", args=(1,)),
+            data={"description": desc},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response2.status_code, 302)
+
+    def test_coupon_edit(self):
+        """
+        Test case for registering coupon
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        cr = ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+        coupon = Coupon.objects.create(cr_id=cr, description=desc)
+        coupon.description = "desc"
+        response = self.client.get(reverse("naturescall:coupon_edit", args=(1,)))
+        response2 = self.client.post(
+            reverse("naturescall:coupon_edit", args=(1,)),
+            data={"description": "hello"},
+        )
+        coupon_new = Coupon.objects.filter(cr_id=cr)[0]
+        self.assertEqual(coupon_new.description, "hello")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response2.status_code, 302)
+
+    def test_coupon_no_valid_claim(self):
+        """
+        If a restroom has not been claimed, no coupon page should be
+        accessible
+        """
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        create_restroom(yelp_id, desc)
+        response = self.client.get(reverse("naturescall:coupon_register", args=(1,)))
+        response1 = self.client.get(reverse("naturescall:coupon_edit", args=(1,)))
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response1.status_code, 404)
+
+    def test_flagging_own_comment(self):
+        """
+        A user cannot flag their own comment
+        """
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        Rating.objects.create(
+            restroom_id=rr,
+            user_id=user,
+            rating="4",
+            headline="headline1",
+            comment="comment1",
+        )
+        response = self.client.get(reverse("naturescall:flag_comment", args=(1,)))
+        self.assertEqual(response.status_code, 404)
+
+    def test_flagging_comment(self):
+        """
+        Once a restroom has been rated, another user can flag the comment
+        """
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        Rating.objects.create(
+            restroom_id=rr,
+            user_id=user,
+            rating="4",
+            headline="headline1",
+            comment="comment1",
+        )
+        user1 = User.objects.create_user("Jon1", "jon1@email.com")
+        self.client.force_login(user=user1)
+        response = self.client.get(reverse("naturescall:flag_comment", args=(1,)))
+        self.assertEqual(response.status_code, 200)
+
+    def test_flagging_comment_via_form(self):
+        """
+        Once a restroom has been rated, another user can flag the comment
+        via the form
+        """
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        Rating.objects.create(
+            restroom_id=rr,
+            user_id=user,
+            rating="4",
+            headline="headline1",
+            comment="comment1",
+        )
+        user1 = User.objects.create_user("Jon1", "jon1@email.com")
+        self.client.force_login(user=user1)
+        response = self.client.post(
+            reverse("naturescall:flag_comment", args=(1,)), data={"flag": True}
+        )
+        self.assertEqual(response.status_code, 302)
+
+    def test_flagging_comment_again(self):
+        """
+        Once a restroom has been rated, the same user can't flag it again
+        """
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        user = User.objects.create_user("Jon", "jon@email.com")
+        self.client.force_login(user=user)
+        rating = Rating.objects.create(
+            restroom_id=rr,
+            user_id=user,
+            rating="4",
+            headline="headline1",
+            comment="comment1",
+        )
+        user1 = User.objects.create_user("Jon1", "jon1@email.com")
+        self.client.force_login(user=user1)
+        Flag.objects.create(user_id=user1, rating_id=rating)
+        response = self.client.get(reverse("naturescall:flag_comment", args=(1,)))
+        self.assertEqual(response.status_code, 404)
+
+    def test_view_detail_page_with_rating_anonymous_user(self):
+        """
+        An anonymous user should be able to view the detail page
+        even if it includes ratings
+        """
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        user = User.objects.create_user("Jon", "jon@email.com")
+        Rating.objects.create(
+            restroom_id=rr,
+            user_id=user,
+            rating="4",
+            headline="headline",
+            comment="comment",
+        )
+        response = self.client.get(reverse("naturescall:restroom_detail", args=(1,)))
+        self.assertEqual(response.status_code, 200)

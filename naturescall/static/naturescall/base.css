@@ -5,8 +5,34 @@ body {
     background-size: 100%;
 }
 
-.ratings {
+a {
+    color: #2cdf33;
+}
+
+a:hover {
+    color: green;
+}
+
+.dropdown-menu {
+    background-color: rgba(0,0,0,0.5);
+}
+
+.dropdown-item {
     color: white;
-    text-shadow: 2px 2px black;
+}
+
+.dropdown-item:hover {
+    color: white;
+    background-color: rgba(32,32,32,0.5);
+}
+
+.material-icons {
+    display: inline-flex;
+    vertical-align: middle;
+}
+
+.white-center-shadow {
+    color: white;
     text-align: center;
+    text-shadow: 2px 2px black;
 }

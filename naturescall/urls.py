@@ -6,6 +6,7 @@ from . import views
 app_name = "naturescall"
 urlpatterns = [
     path("", views.index, name="index"),
+    path("about", views.about_page, name="about_page"),
     path("search_restroom/", views.search_restroom, name="search_restroom"),
     path("restroom_detail/<int:r_id>", views.restroom_detail, name="restroom_detail"),
     path("get_qr/<int:c_id>", views.get_qr, name="get_qr"),
@@ -25,6 +26,13 @@ urlpatterns = [
         "comment_response/<int:rating_id>",
         views.comment_response,
         name="comment_response",
+    ),
+    path("coupon_register/<int:r_id>", views.coupon_register, name="coupon_register"),
+    path("coupon_edit/<int:r_id>", views.coupon_edit, name="coupon_edit"),
+    path(
+        "flag_comment/<int:rating_id>",
+        views.flag_comment,
+        name="flag_comment",
     ),
 ]
 # urlpatterns += [

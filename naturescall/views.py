@@ -1,10 +1,24 @@
-from naturescall.models import Restroom, Rating, ClaimedRestroom, Coupon, Transaction
+from naturescall.models import (
+    Restroom,
+    Rating,
+    ClaimedRestroom,
+    Coupon,
+    Transaction,
+    Flag,
+)
 from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponseRedirect, Http404
 
 # from .forms import LocationForm
-from .forms import AddRestroom, AddRating, ClaimRestroom, CommentResponse
+from .forms import (
+    AddRestroom,
+    AddRating,
+    ClaimRestroom,
+    CommentResponse,
+    addCoupon,
+    FlagComment,
+)
 import requests
 from django.contrib.auth.decorators import login_required
 from .filters import RestroomFilter
@@ -40,6 +54,12 @@ def index(request):
     return render(request, "naturescall/home.html", context)
 
 
+# The about page
+def about_page(request):
+    context = {}
+    return render(request, "naturescall/about_page.html", context)
+
+
 # The search page for the user to enter address, search for and
 # display the restrooms around the location
 def search_restroom(request):
@@ -70,6 +90,23 @@ def search_restroom(request):
                         restroom["db_id"] = ""
                     else:
                         restroom["db_id"] = querySet.values()[0]["id"]
+                        restroom["accessible"] = querySet.values()[0]["accessible"]
+                        restroom["family_friendly"] = querySet.values()[0][
+                            "family_friendly"
+                        ]
+                        restroom["transaction_not_required"] = querySet.values()[0][
+                            "transaction_not_required"
+                        ]
+                        qS = ClaimedRestroom.objects.filter(
+                            restroom_id_id=restroom["db_id"]
+                        )
+                        if qS:
+                            claimedRestroom = qS.values()[0]["id"]
+                            q = Coupon.objects.filter(cr_id_id=claimedRestroom)
+                            if q:
+                                restroom["coupon"] = True
+                        else:
+                            restroom["coupon"] = False
                     addr = str(restroom["location"]["display_address"])
                     restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
                 url = str(
@@ -113,6 +150,23 @@ def search_restroom(request):
                         restroom["db_id"] = ""
                     else:
                         restroom["db_id"] = querySet.values()[0]["id"]
+                        restroom["accessible"] = querySet.values()[0]["accessible"]
+                        restroom["family_friendly"] = querySet.values()[0][
+                            "family_friendly"
+                        ]
+                        restroom["transaction_not_required"] = querySet.values()[0][
+                            "transaction_not_required"
+                        ]
+                        qS = ClaimedRestroom.objects.filter(
+                            restroom_id_id=restroom["db_id"]
+                        )
+                        if qS:
+                            claimedRestroom = qS.values()[0]["id"]
+                            q = Coupon.objects.filter(cr_id_id=claimedRestroom)
+                            if q:
+                                restroom["coupon"] = True
+                        else:
+                            restroom["coupon"] = False
                     addr = str(restroom["location"]["display_address"])
                     restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
                 id_obj_pairs = {}
@@ -169,6 +223,23 @@ def search_restroom(request):
                     restroom["db_id"] = ""
                 else:
                     restroom["db_id"] = querySet.values()[0]["id"]
+                    restroom["accessible"] = querySet.values()[0]["accessible"]
+                    restroom["family_friendly"] = querySet.values()[0][
+                        "family_friendly"
+                    ]
+                    restroom["transaction_not_required"] = querySet.values()[0][
+                        "transaction_not_required"
+                    ]
+                    qS = ClaimedRestroom.objects.filter(
+                        restroom_id_id=restroom["db_id"]
+                    )
+                    if qS:
+                        claimedRestroom = qS.values()[0]["id"]
+                        q = Coupon.objects.filter(cr_id_id=claimedRestroom)
+                        if q:
+                            restroom["coupon"] = True
+                    else:
+                        restroom["coupon"] = False
                 addr = str(restroom["location"]["display_address"])
                 restroom["addr"] = addr.translate(str.maketrans("", "", "[]'"))
             id_obj_pairs = {}
@@ -211,7 +282,7 @@ def rate_restroom(request, r_id):
             if rating_set:
                 entry.id = rating_set[0].id
             entry.save()
-            msg = "Congratulations, Your rating has been saved!"
+            msg = "Congratulations, your rating has been saved!"
             messages.success(request, f"{msg}")
             if request.session["referer"] and "profile" in request.session["referer"]:
                 return redirect("accounts:profile")
@@ -322,15 +393,13 @@ def restroom_detail(request, r_id):
 
     # determine if claim button should be shown
     coupon_id = -1
-    show_claim = True
     has_coupon = False
 
     # should not be shown to an unauthenticated user
-    if not current_user.is_authenticated:
-        show_claim = False
+    show_claim = current_user.is_authenticated
     # should not be shown if any user has a verified claim
     # should not be shown if this user has a previous unverified claim
-
+    coupon_description = ""
     all_claims = ClaimedRestroom.objects.filter(restroom_id=current_restroom)
     for claim in all_claims:
         if claim.verified or claim.user_id == current_user:
@@ -338,21 +407,40 @@ def restroom_detail(request, r_id):
             if hasCoupon(claim.id) != -1:
                 has_coupon = True
                 coupon_id = hasCoupon(claim.id)
+                coupon_entry = Coupon.objects.filter(id=coupon_id)[0]
+                coupon_description = coupon_entry.description
 
     ratings = Rating.objects.filter(restroom_id=r_id)
+    ratings_flags = []
+    for rating in ratings:
+        # anonymous users should not see the flag button
+        show_flag = current_user.is_authenticated
+        if show_flag:
+            prev_flag = Flag.objects.filter(
+                user_id=current_user, rating_id=rating
+            ).exists()
+            # users can't flag their own comment or comments they've previously flagged
+            if rating.user_id == current_user or prev_flag:
+                show_flag = False
+        ratings_flags.append((rating, show_flag))
 
     # determine if the rate button should display "Rate" or "Edit"
     if current_user.is_authenticated:
         is_first_time_rating = not ratings.filter(
-            restroom_id=r_id,
-            user_id=current_user
-            ).exists()
+            restroom_id=r_id, user_id=current_user
+        ).exists()
     else:
         is_first_time_rating = True
 
     rating = yelp_data["rating"]
     if rating != "N/A":
-        five_stars = [rating - 0.0, rating - 1.0, rating - 2.0, rating - 3.0, rating - 4.0]
+        five_stars = [
+            rating - 0.0,
+            rating - 1.0,
+            rating - 2.0,
+            rating - 3.0,
+            rating - 4.0,
+        ]
     else:
         five_stars = [0.0, 0.0, 0.0, 0.0, 0.0]
 
@@ -366,6 +454,8 @@ def restroom_detail(request, r_id):
         "has_coupon": has_coupon,
         "coupon_id": coupon_id,
         "is_first_time_rating": is_first_time_rating,
+        "ratings_flags": ratings_flags,
+        "coupon_description": coupon_description,
     }
     return render(request, "naturescall/restroom_detail.html", context)
 
@@ -379,12 +469,9 @@ def hasCoupon(restroom_id):
 
 @login_required(login_url="login")
 def get_qr(request, c_id):
-    restroom = ClaimedRestroom.objects.filter(
-        id=Coupon.objects.filter(id=c_id)[0].cr_id.id
-    )[0].restroom_id
-    r_id = restroom.id
-    querySet = Restroom.objects.filter(id=r_id)
-    res_title = querySet.values()[0]["title"]
+    current_coupon = get_object_or_404(Coupon, id=c_id)
+    current_restroom = current_coupon.cr_id.restroom_id
+    res_title = current_restroom.title
     # url_string = "http://127.0.0.1:8000/qr_confirm/"
     # + str(c_id) +'/' + str(request.user.id)
     # url_string = request.build_absolute_uri() + "/qr_confirm/"
@@ -401,16 +488,22 @@ def get_qr(request, c_id):
 
 @login_required(login_url="login")
 def qr_confirm(request, c_id, u_id):
-    restroom = ClaimedRestroom.objects.filter(
-        id=Coupon.objects.filter(id=c_id)[0].cr_id.id
-    )[0].restroom_id
-    r_id = restroom.id
-    res_querySet = Restroom.objects.filter(id=r_id)
-    res_title = res_querySet.values()[0]["title"]
-    context = {"title": res_title}
-    coupon = Coupon.objects.filter(id=c_id)[0]
-    user = User.objects.get(id=u_id)
-    transaction = Transaction(coupon_id=coupon, user_id=user)
+    # restroom = ClaimedRestroom.objects.filter(
+    #     id=Coupon.objects.filter(id=c_id)[0].cr_id.id
+    # )[0].restroom_id
+    # r_id = restroom.id
+    # res_querySet = Restroom.objects.filter(id=r_id)
+    # res_title = res_querySet.values()[0]["title"]
+    current_coupon = get_object_or_404(Coupon, id=c_id)
+    current_user = get_object_or_404(User, id=u_id)
+    current_restroom = current_coupon.cr_id.restroom_id
+    res_title = current_restroom.title
+
+    context = {"title": res_title, "description": current_coupon.description}
+
+    # coupon = Coupon.objects.filter(id=c_id)[0]
+    # user = User.objects.get(id=u_id)
+    transaction = Transaction(coupon_id=current_coupon, user_id=current_user)
     transaction.save()
     return render(request, "naturescall/qr_confirm.html", context)
 
@@ -432,14 +525,6 @@ def claim_restroom(request, r_id):
             claim.restroom_id = current_restroom
             claim.user_id = current_user
             claim.save()
-            claimed_restroom = ClaimedRestroom.objects.filter(
-                restroom_id=claim.restroom_id
-            )[0]
-            # create a tempt coupon, just for now
-            coupon = Coupon(
-                cr_id=claimed_restroom, description="This is filler description"
-            )
-            coupon.save()
             return redirect("naturescall:restroom_detail", r_id=r_id)
     else:
         form = ClaimRestroom()
@@ -457,12 +542,63 @@ def manage_restroom(request, r_id):
     )
     if not valid_claim:
         raise Http404("Access Denied")
+    has_Coupon = False
+    if hasCoupon(valid_claim[0].id) != -1:
+        has_Coupon = True
     context = {
         "title": current_restroom.title,
         "yelp_id": current_restroom.yelp_id,
         "r_id": current_restroom.id,
+        "hasCoupon": has_Coupon,
     }
     return render(request, "naturescall/manage_restroom.html", context)
+
+
+@login_required
+def coupon_register(request, r_id):
+    current_restroom = get_object_or_404(Restroom, id=r_id)
+    current_claims = ClaimedRestroom.objects.filter(
+        restroom_id=current_restroom, verified=True
+    )
+    if not current_claims:
+        raise Http404("Access Denied")
+    if request.method == "POST":
+        form = addCoupon(data=request.POST)
+        if form.is_valid():
+            entry = form.save(commit=False)
+            entry.cr_id = current_claims[0]
+            entry.save()
+            msg = "Congratulations, Your coupon has been registered!"
+            messages.success(request, f"{msg}")
+            return redirect("naturescall:manage_restroom", r_id=current_restroom.id)
+    else:
+        form = addCoupon()
+        context = {"form": form, "restroom": current_restroom}
+        return render(request, "naturescall/coupon_register.html", context)
+
+
+@login_required
+def coupon_edit(request, r_id):
+    current_restroom = get_object_or_404(Restroom, id=r_id)
+    current_claims = ClaimedRestroom.objects.filter(
+        restroom_id=current_restroom, verified=True
+    )
+    if not current_claims:
+        raise Http404("Access Denied")
+    coupon = get_object_or_404(Coupon, cr_id=current_claims.values()[0]["id"])
+    if request.method == "POST":
+        form = addCoupon(data=request.POST)
+        if form.is_valid():
+            entry = form.save(commit=False)
+            coupon.description = entry.description
+            coupon.save()
+            msg = "Congratulations, Your coupon has been updated!"
+            messages.success(request, f"{msg}")
+            return redirect("naturescall:manage_restroom", r_id=current_restroom.id)
+    else:
+        form = addCoupon(instance=coupon)
+        context = {"form": form, "restroom": current_restroom}
+        return render(request, "naturescall/coupon_edit.html", context)
 
 
 @login_required
@@ -516,6 +652,34 @@ def comment_response(request, rating_id):
         "form": form,
     }
     return render(request, "naturescall/comment_response.html", context)
+
+
+@login_required
+def flag_comment(request, rating_id):
+    current_rating = get_object_or_404(Rating, id=rating_id)
+    current_restroom = current_rating.restroom_id
+    current_user = request.user
+    if current_rating.user_id == current_user:
+        raise Http404("You cannot flag your own comment!")
+    if Flag.objects.filter(user_id=current_user, rating_id=current_rating).exists():
+        raise Http404("You've already flagged this comment!")
+    headline = current_rating.headline
+    comment = current_rating.comment
+    if request.method == "POST":
+        form = FlagComment(request.POST)
+        if form.is_valid():
+            flag = Flag(rating_id=current_rating, user_id=current_user)
+            flag.save()
+            return redirect("naturescall:restroom_detail", r_id=current_restroom.id)
+    else:
+        form = FlagComment()
+    context = {
+        "form": form,
+        "headline": headline,
+        "comment": comment,
+        "r_id": current_restroom.id,
+    }
+    return render(request, "naturescall/flag_comment.html", context)
 
 
 # Helper function: make an API request

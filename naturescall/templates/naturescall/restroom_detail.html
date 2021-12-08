@@ -3,16 +3,22 @@
 {% block style %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <style>
-.checked {
-    color: orange;
-}
+    body {
+        background-repeat: repeat;
+    }
+    .checked {
+        color: orange;
+    }
+    .txt-shadow {
+        text-shadow: 2px 2px black;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container">
     <div class="row">
-        <div class="col-4">
+        <div class="col-5">
             <div class="row">
                 <!-- restroom image -->
                 <img src={{res.yelp_data.image_url}} alt="Card image cap" style= "width: 600px; height: 15vw; object-fit: cover;">
@@ -33,7 +39,7 @@
                 <!-- end of map -->
             </div>
         </div>
-        <div class="col-8">
+        <div class="col-7">
             <!-- restroom info -->
             <div class="container-fluid" style="color: white; background-color: transparent">
                 <h2 style="text-shadow: 2px 2px black;">{{res.yelp_data.name}}</h2>
@@ -44,18 +50,18 @@
                     <i class="material-icons">child_friendly</i>
                 {% endif %}
                 {% if res.yelp_data.transaction_not_required  %}
-                    <i class="material-icons">attach_money</i>
+                    <i class="material-icons">money_off</i>
                 {% endif %}
                 {% if is_first_time_rating %}
                     <a href="{% url 'naturescall:rate_restroom' res.yelp_data.db_id %}" class="btn btn-success">Rate Now!</a>
                 {% else %}
-                    <a href="{% url 'naturescall:rate_restroom' res.yelp_data.db_id %}" class="btn btn-success">Edit Rating</a>
+                    <a href="{% url 'naturescall:rate_restroom' res.yelp_data.db_id %}" class="btn btn-success">
+                        <i class="material-icons">mode_edit</i>
+                        Edit Rating
+                    </a>
                 {% endif %}
                 {% if show_claim %}
                     <a href="{% url 'naturescall:claim_restroom' res.yelp_data.db_id %}" class="btn btn-success">Claim This Restroom!</a>
-                {% endif %}
-                {% if has_coupon %}
-                    <a href="{% url 'naturescall:get_qr' coupon_id %}" class="btn btn-success">QR_code!</a>
                 {% endif %}
                 <br>
                 {% for star in five_stars %}
@@ -68,35 +74,57 @@
                 {% endif %}
                 {% endfor %}
                 {{rating}}
-                <h4 class="card-text" style="text-shadow: 2px 2px black;">{{res.addr}}</h4>
+                <h4 class="card-text txt-shadow">{{res.addr}}</h4>
                 <br>
-                <h4 class="card-text" style="text-shadow: 2px 2px black;">Description:</h4>
-                <p class="card-text" style="text-shadow: 2px 2px black;">{{res.desc}}</p>
+                <h4 class="card-text txt-shadow">Description:</h4>
+                <h5 class="card-text txt-shadow">{{res.desc}}</h5>
+                <br>
+                {% if has_coupon %}
+                <h4 class="card-text txt-shadow">Speacial Deal:</h4>
+                <h5 class="card-text txt-shadow">{{coupon_description}}</h5>
+                <a href="{% url 'naturescall:get_qr' coupon_id %}" class="btn btn-warning">
+                    <i class="fa fa-qrcode"></i> 
+                    Coupon
+                </a>
+                {% endif %}
         </div>
     </div>
 </div>
 
-<div class="container">
-    <h2 style="color: white; text-shadow: 2px 2px black;">Ratings</h2>
-    {% for rating in ratings %}
-    <div class="card text-white mb-3" style="background-color: rgba(0,0,0,0.5)">
-        <div class="card-body">
-            <h4>{{rating.user_id}}</h4>
+<div class="container mt-3">
+    <h2 class="white-center-shadow my-3">
+        <i class="material-icons">mode_comment</i>
+        Ratings
+    </h2>
+    <div class="row">
+        {% for rf in ratings_flags %}
+        <div class="col-sm text-white m-3 p-3" style="background-color: rgba(0,0,0,0.5);">
+            <h4>
+                <i class="material-icons">person</i>
+                {{rf.0.user_id}}
+            </h4>
             <p>
-                Rating: {{rating.rating}}<br>
-                Headline: {{rating.headline}}<br>
+                <i class="fa fa-star"></i> Rating: {{rf.0.rating}}<br>
+                Headline: {{rf.0.headline}}<br>
                 <br>
-                Comment: <br>
-                {{rating.comment}}<br>
-                {% if rating.response %}
+                <i class="material-icons">mode_comment</i> Comment:<br>
+                {{rf.0.comment}}<br>
+                {% if rf.0.response %}
                 <br>
-                &emsp;Owner reply:<br>
-                &emsp;{{ rating.response }}<br>
+                &emsp;<i class="material-icons">mode_comment</i> Owner reply:<br>
+                &emsp;{{ rf.0.response }}<br>
+                {% endif %}
+                <br>
+                {% if rf.1 %}
+                <a class="btn-sm btn-danger" href="{% url 'naturescall:flag_comment' rf.0.id %}">
+                    <i class="fa fa-flag"></i>
+                    Flag
+                </a>
                 {% endif %}
                 <br>
             </p>
         </div>
+        {% endfor %}
     </div>
-    {% endfor %}
 </div>
 {% endblock %}

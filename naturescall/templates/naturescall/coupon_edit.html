@@ -2,11 +2,12 @@
 
 {% block content %}
 <div class="container white-center-shadow">
-  <h3>Edit your rating for {{title}}</h3>
+  <h5>Edit coupon for</h5>
+  <h2>{{restroom.title}}</h2>
   <form action="" method="POST">
-    {%csrf_token%}
-    {{form.as_p}}
-    <input class="btn btn-primary" type= "submit" value = "Submit">
+      {%csrf_token%}
+      {{form.as_p}}
+      <input class="btn btn-success" type="submit" value="Done">
   </form>
 </div>
 {% endblock %}
