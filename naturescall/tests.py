@@ -935,3 +935,22 @@ class ViewTests(TestCase):
         Flag.objects.create(user_id=user1, rating_id=rating)
         response = self.client.get(reverse("naturescall:flag_comment", args=(1,)))
         self.assertEqual(response.status_code, 404)
+
+    def test_view_detail_page_with_rating_anonymous_user(self):
+        """
+        An anonymous user should be able to view the detail page
+        even if it includes ratings
+        """
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        user = User.objects.create_user("Jon", "jon@email.com")
+        Rating.objects.create(
+            restroom_id=rr,
+            user_id=user,
+            rating="4",
+            headline="headline",
+            comment="comment",
+        )
+        response = self.client.get(reverse("naturescall:restroom_detail", args=(1,)))
+        self.assertEqual(response.status_code, 200)

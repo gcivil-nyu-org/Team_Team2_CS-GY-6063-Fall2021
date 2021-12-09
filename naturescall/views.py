@@ -54,6 +54,12 @@ def index(request):
     return render(request, "naturescall/home.html", context)
 
 
+# The about page
+def about_page(request):
+    context = {}
+    return render(request, "naturescall/about_page.html", context)
+
+
 # The search page for the user to enter address, search for and
 # display the restrooms around the location
 def search_restroom(request):
@@ -166,7 +172,6 @@ def search_restroom(request):
                 id_obj_pairs = {}
                 for obj in tableFilter.qs:
                     id = obj.id
-                    print(id)
                     id_obj_pairs[id] = obj
                 for restroom in data1:
                     if restroom["db_id"] in id_obj_pairs:
@@ -277,7 +282,7 @@ def rate_restroom(request, r_id):
             if rating_set:
                 entry.id = rating_set[0].id
             entry.save()
-            msg = "Congratulations, Your rating has been saved!"
+            msg = "Congratulations, your rating has been saved!"
             messages.success(request, f"{msg}")
             if request.session["referer"] and "profile" in request.session["referer"]:
                 return redirect("accounts:profile")
@@ -394,7 +399,7 @@ def restroom_detail(request, r_id):
     show_claim = current_user.is_authenticated
     # should not be shown if any user has a verified claim
     # should not be shown if this user has a previous unverified claim
-    coupon_description = ''
+    coupon_description = ""
     all_claims = ClaimedRestroom.objects.filter(restroom_id=current_restroom)
     for claim in all_claims:
         if claim.verified or claim.user_id == current_user:
@@ -402,19 +407,21 @@ def restroom_detail(request, r_id):
             if hasCoupon(claim.id) != -1:
                 has_coupon = True
                 coupon_id = hasCoupon(claim.id)
-                coupon_entry = Coupon.objects.filter(id = coupon_id)[0]
+                coupon_entry = Coupon.objects.filter(id=coupon_id)[0]
                 coupon_description = coupon_entry.description
-
 
     ratings = Rating.objects.filter(restroom_id=r_id)
     ratings_flags = []
     for rating in ratings:
-        show_flag = True
-        prev_flag = Flag.objects.filter(user_id=current_user, rating_id=rating).exists()
-        # entry = Entry.objects.get(pk=123)
-        # if some_queryset.filter(pk=entry.pk).exists():
-        if rating.user_id == current_user or prev_flag:
-            show_flag = False
+        # anonymous users should not see the flag button
+        show_flag = current_user.is_authenticated
+        if show_flag:
+            prev_flag = Flag.objects.filter(
+                user_id=current_user, rating_id=rating
+            ).exists()
+            # users can't flag their own comment or comments they've previously flagged
+            if rating.user_id == current_user or prev_flag:
+                show_flag = False
         ratings_flags.append((rating, show_flag))
 
     # determine if the rate button should display "Rate" or "Edit"
@@ -448,7 +455,7 @@ def restroom_detail(request, r_id):
         "coupon_id": coupon_id,
         "is_first_time_rating": is_first_time_rating,
         "ratings_flags": ratings_flags,
-        "coupon_description" : coupon_description,
+        "coupon_description": coupon_description,
     }
     return render(request, "naturescall/restroom_detail.html", context)
 
@@ -577,7 +584,7 @@ def coupon_register(request, r_id):
             return redirect("naturescall:manage_restroom", r_id=current_restroom.id)
     else:
         form = addCoupon()
-        context = {"form": form}
+        context = {"form": form, "restroom": current_restroom}
         return render(request, "naturescall/coupon_register.html", context)
 
 
@@ -600,8 +607,8 @@ def coupon_edit(request, r_id):
             messages.success(request, f"{msg}")
             return redirect("naturescall:manage_restroom", r_id=current_restroom.id)
     else:
-        form = addCoupon()
-        context = {"form": form}
+        form = addCoupon(instance=coupon)
+        context = {"form": form, "restroom": current_restroom}
         return render(request, "naturescall/coupon_edit.html", context)
 
 

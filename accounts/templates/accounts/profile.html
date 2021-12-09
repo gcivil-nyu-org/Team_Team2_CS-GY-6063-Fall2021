@@ -1,8 +1,25 @@
 {% extends "naturescall/base.html" %}
 
-{% block content %}
-<div class="container ratings">
+{% block style %}
+<style>
+	.card {
+		background-color: rgba(0,0,0,0.5);
+		color: white;
+	}
+	.card-body {
+		color: white;
+	}
+	.btn-link {
+		color: #2cdf33;
+	}
+	.btn-link:hover {
+		color: green;
+	}
+</style>
+{% endblock %}
 
+{% block content %}
+<div class="container white-center-shadow">
 	<h2>User-Profile</h2>
 	<form method="POST" enctype="multipart/form-data">
 		{% csrf_token %}
@@ -13,10 +30,9 @@
 		</fieldset>
 		<input class="btn btn-success" type="submit" value="Update">
 	</form>
-
 </div>
 {% if claims %}
-<div class="container ratings">
+<div class="container white-center-shadow">
 	<div class="accordion" id="accordion1">
 		<br>
 		<h3>My Restrooms</h3>
@@ -34,31 +50,33 @@
 	</div>
 </div>
 {% endif %}
-<div class="container ratings">
+<div class="container white-center-shadow">
 	<div class="accordion" id="accordionExample">
 		<br>
-		<h3>Ratings and Reviews</h3>
-			{% for rating in ratings %}
-			<div class="card">
-				<div class="card-header" id="heading-{{rating.pk}}">
-					<h2 class="mb-0">
-						<button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse-{{rating.pk}}" aria-expanded="true" aria-controls="collapse-{{rating.pk}}">
-							{{rating.restroom_id}}
-						</button>
-					</h2>
-				</div>
-
-				<div id="collapse-{{rating.pk}}" class="collapse" aria-labelledby="heading-{{rating.pk}}" data-parent="#accordionExample">
-					<div class="card-body" style="color: black; text-shadow: 0px 0px;">
-						Rating: {{rating.rating}}<br>
-						Headline: {{rating.headline}}<br>
-						Comment: {{rating.comment}}<br>
-						<a href="{% url 'naturescall:rate_restroom' rating.restroom_id_id %}" style="color: rgb(40, 180, 40); text-shadow: 0px 0px;">Edit</a><br>
-						<a href="{% url 'naturescall:delete_rating' rating.restroom_id_id %}" style="color: rgb(40, 180, 40); text-shadow: 0px 0px;">Delete</a>
-					</div>
+		<h3>
+			<i class="material-icons">mode_comment</i>
+			Ratings and Reviews
+		</h3>
+		{% for rating in ratings %}
+		<div class="card">
+			<div class="card-header" id="heading-{{rating.pk}}">
+				<h2 class="mb-0">
+					<button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse-{{rating.pk}}" aria-expanded="true" aria-controls="collapse-{{rating.pk}}">
+						{{rating.restroom_id}}
+					</button>
+				</h2>
+			</div>
+			<div id="collapse-{{rating.pk}}" class="collapse" aria-labelledby="heading-{{rating.pk}}" data-parent="#accordionExample">
+				<div class="card-body">
+					Rating: {{rating.rating}}<br>
+					Headline: {{rating.headline}}<br>
+					Comment: {{rating.comment}}<br>
+					<a href="{% url 'naturescall:rate_restroom' rating.restroom_id_id %}">Edit</a><br>
+					<a href="{% url 'naturescall:delete_rating' rating.restroom_id_id %}">Delete</a>
 				</div>
 			</div>
-			{% endfor %}
+		</div>
+		{% endfor %}
 	</div>
 </div>
 {% if is_admin %}
