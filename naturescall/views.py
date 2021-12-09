@@ -531,17 +531,19 @@ def claim_restroom(request, r_id):
     context = {"form": form, "title": current_restroom.title}
     return render(request, "naturescall/claim_restroom.html", context)
 
+
 @login_required
 def admin_page(request):
     current_user = request.user
     if current_user.username != "admin":
         raise Http404("Access Denied!!!")
-    #transaction_set = Transaction.objects.all()
-    transaction_set = Transaction.objects.raw('SELECT * FROM naturescall_transaction')
+    # transaction_set = Transaction.objects.all()
+    transaction_set = Transaction.objects.raw("SELECT * FROM naturescall_transaction")
     print(transaction_set[0])
     transaction_number = len(transaction_set)
-    context = {"revenue":transaction_number}
+    context = {"revenue": transaction_number}
     return render(request, "naturescall/admin_page.html", context)
+
 
 @login_required
 def manage_restroom(request, r_id):
