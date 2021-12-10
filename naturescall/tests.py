@@ -37,9 +37,16 @@ def create_Coupon(self):
 class ViewTests(TestCase):
     def test_index(self):
         """
-        If index is fetched, the response should contain welcome message"
+        If index is fetched, the response should be 200"
         """
         response = self.client.get(reverse("naturescall:index"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_about_page(self):
+        """
+        If the About page is fetched, the response should be 200"
+        """
+        response = self.client.get(reverse("naturescall:about_page"))
         self.assertEqual(response.status_code, 200)
 
     def test_missing_restroom(self):
