@@ -416,11 +416,16 @@ def restroom_detail(request, r_id):
         # anonymous users should not see the flag button
         show_flag = current_user.is_authenticated
         if show_flag:
+            # users can't flag comments they've previously flagged
             prev_flag = Flag.objects.filter(
                 user_id=current_user, rating_id=rating
             ).exists()
-            # users can't flag their own comment or comments they've previously flagged
-            if rating.user_id == current_user or prev_flag:
+            # users can't flag comments for restrooms they've claimed
+            is_claimed = ClaimedRestroom.objects.filter(
+                user_id=current_user, restroom_id=current_restroom
+            ).exists()
+            # users can't flag their own comment
+            if rating.user_id == current_user or prev_flag or is_claimed:
                 show_flag = False
         ratings_flags.append((rating, show_flag))
 
@@ -675,6 +680,10 @@ def flag_comment(request, rating_id):
         raise Http404("You cannot flag your own comment!")
     if Flag.objects.filter(user_id=current_user, rating_id=current_rating).exists():
         raise Http404("You've already flagged this comment!")
+    if ClaimedRestroom.objects.filter(
+        user_id=current_user, restroom_id=current_restroom
+    ).exists():
+        raise Http404("You cannot flag comments for a restaurant you've claimed!")
     headline = current_rating.headline
     comment = current_rating.comment
     if request.method == "POST":
