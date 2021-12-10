@@ -92,7 +92,7 @@ def view_profile(request):
         p_form = ProfileUpdateForm(instance=request.user.profile)
     current_user = request.user
     is_admin = False
-    if request.user.username == "admin":
+    if request.user.is_superuser:
         is_admin = True
     ratings = Rating.objects.filter(user_id=current_user)
     claims = ClaimedRestroom.objects.filter(user_id=current_user, verified=True)
