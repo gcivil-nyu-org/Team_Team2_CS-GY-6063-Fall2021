@@ -533,6 +533,18 @@ def claim_restroom(request, r_id):
 
 
 @login_required
+def admin_page(request):
+    current_user = request.user
+    if not current_user.is_superuser:
+        raise Http404("Access Denied!!!")
+    # transaction_set = Transaction.objects.all()
+    transaction_set = Transaction.objects.raw("SELECT * FROM naturescall_transaction")
+    transaction_number = len(transaction_set)
+    context = {"revenue": transaction_number}
+    return render(request, "naturescall/admin_page.html", context)
+
+
+@login_required
 def manage_restroom(request, r_id):
     """manage a restroom"""
     current_restroom = get_object_or_404(Restroom, id=r_id)
