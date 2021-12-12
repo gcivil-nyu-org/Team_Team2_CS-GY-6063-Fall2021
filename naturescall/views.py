@@ -6,6 +6,7 @@ from naturescall.models import (
     Transaction,
     Flag,
 )
+from django.db import connection
 from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponseRedirect, Http404
@@ -532,14 +533,31 @@ def claim_restroom(request, r_id):
     return render(request, "naturescall/claim_restroom.html", context)
 
 
+def dictfetchall(cursor):
+    "Helper function: Return all rows from a cursor as a dict"
+    columns = [col[0] for col in cursor.description]
+    return [
+        dict(zip(columns, row))
+        for row in cursor.fetchall()
+    ]
+
+def transaction_query():
+    "Helper function: transaction SQL query"
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT coupon_id_id AS coupon_id, count(*) AS count FROM naturescall_transaction GROUP BY coupon_id_id ORDER BY count(*) DESC LIMIT 5")
+        row = dictfetchall(cursor)
+    return row
+
+
 @login_required
 def admin_page(request):
+    "parsing logic for the custom admin page"
     current_user = request.user
     if not current_user.is_superuser:
         raise Http404("Access Denied!!!")
-    # transaction_set = Transaction.objects.all()
-    transaction_set = Transaction.objects.raw("SELECT * FROM naturescall_transaction")
-    transaction_number = len(transaction_set)
+    trans_set = transaction_query()
+    print(trans_set)
+    transaction_number = 5
     context = {"revenue": transaction_number}
     return render(request, "naturescall/admin_page.html", context)
 
