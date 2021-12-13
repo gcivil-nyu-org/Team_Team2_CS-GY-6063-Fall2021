@@ -1,6 +1,9 @@
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
+from .tokens import account_activation_token
 from django.contrib.messages import get_messages
 from .models import Profile
 from naturescall.models import Rating, Restroom, ClaimedRestroom
@@ -60,6 +63,18 @@ class ProfileTests(TestCase):
             },
         )
         self.assertContains(response, "Unsuccessful registration. Invalid information.")
+
+    def test_user_activate_success(self):
+        user = User.objects.create_user("testuser1", "howard@gmail.com")
+        user.set_password("test")
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = account_activation_token.make_token(user)
+        response = self.client.get(
+            reverse("accounts:activate", kwargs={"uidb64": uid, "token": token})
+        )
+        self.assertEqual(response.status_code, 302)
+        user = User.objects.get(username="testuser1")
+        self.assertTrue(user.is_active)
 
     def test_invalid_verification_link(self):
         """

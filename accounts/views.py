@@ -91,9 +91,18 @@ def view_profile(request):
         )
         p_form = ProfileUpdateForm(instance=request.user.profile)
     current_user = request.user
+    is_admin = False
+    if request.user.is_superuser:
+        is_admin = True
     ratings = Rating.objects.filter(user_id=current_user)
     claims = ClaimedRestroom.objects.filter(user_id=current_user, verified=True)
-    context = {"u_form": u_form, "p_form": p_form, "ratings": ratings, "claims": claims}
+    context = {
+        "u_form": u_form,
+        "p_form": p_form,
+        "ratings": ratings,
+        "claims": claims,
+        "is_admin": is_admin,
+    }
     return render(request, "accounts/profile.html", context)
 
 
