@@ -26,7 +26,7 @@ def create_Coupon(self):
     user = User.objects.create_user("Jon", "jon@email.com")
     self.client.force_login(user=user)
     desc = "TEST DESCRIPTION"
-    yelp_id = "FkA9aoMhWO4XKFMTuTnl4Q"
+    yelp_id = "3iLPrhNb02n81GdxP_jqgQ"
     rr = Restroom.objects.create(yelp_id=yelp_id, description=desc, accessible=True)
     cr = ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
     coupon = Coupon.objects.create(cr_id=cr, description=desc)
@@ -374,6 +374,7 @@ class ViewTests(TestCase):
         create_Coupon(self)
         user = auth.get_user(self.client)
         self.assertEqual(user.is_authenticated, False)
+        Restroom.objects.create(yelp_id="6FIzpXy82HBT3KZaiA38-Q", description="test")
         response = self.client.get(
             reverse("naturescall:search_restroom"),
             data={"searched": "washigton square park"},
@@ -388,9 +389,7 @@ class ViewTests(TestCase):
         self.assertEqual(user.is_authenticated, False)
         # yelp_id = "FkA9aoMhWO4XKFMTuTnl4Q"
         # desc = "TEST Accessibile= true"
-        Restroom.objects.create(
-            yelp_id="6FIzpXy82HBT3KZaiA38-Q", description="test", accessible=True
-        )
+        Restroom.objects.create(yelp_id="6FIzpXy82HBT3KZaiA38-Q", description="test")
         session = self.client.session
         session["search_location"] = "washigton square park"
         session.save()
@@ -406,11 +405,11 @@ class ViewTests(TestCase):
         response = self.client.get(reverse("naturescall:search_restroom"), data=data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["data"]), 1)
-        # self.assertEqual(response.context["data"][0]["coupon"], True)
+        self.assertEqual(response.context["data"][0]["coupon"], True)
         self.assertEqual(len(response.context["data1"]), 19)
-        # self.assertEqual(response.context["data1"][0]["coupon"], False)
+        self.assertEqual(response.context["data1"][0]["coupon"], False)
 
-    def rch_restroom(self):
+    def test_authenticated_user_search_restroom(self):
         """testing search result for authenticated user"""
         # yelp_id = "FkA9aoMhWO4XKFMTuTnl4Q"
         # desc = "TEST Accessibile= true"
