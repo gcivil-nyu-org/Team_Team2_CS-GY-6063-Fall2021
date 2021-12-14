@@ -12,7 +12,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponseRedirect, Http404
 from json import dumps
 
-# from .forms import LocationForm
 from .forms import (
     AddRestroom,
     AddRating,
@@ -26,19 +25,11 @@ from django.contrib.auth.decorators import login_required
 from .filters import RestroomFilter
 from django.contrib import messages
 from urllib.parse import urlencode
-
-# import argparse
-# import json
-# import sys
-# import urllib
-# from urllib.error import HTTPError
 from urllib.parse import quote
 
-# from urllib.parse import urlencode
 import os
 from django.urls import reverse
 
-# import datetime
 
 api_key = str(os.getenv("yelp_key"))
 map_embedded_key = str(os.getenv("map_embedded"))
@@ -70,7 +61,6 @@ def search_restroom(request):
         location = request.GET["searched"]
         if not request.user.is_authenticated:
             map = str(os.getenv("map"))
-            # location = request.GET["searched"]
             tableFilter = RestroomFilter()
             k = search(api_key, '"restroom","food","public"', location, 20)
             data = []
@@ -124,7 +114,6 @@ def search_restroom(request):
             return render(request, "naturescall/search_restroom.html", context)
         else:
             dbRestroom = Restroom.objects.all()
-            # location = request.GET["searched"]
             profile = request.user.profile
             d = {
                 "accessible": profile.accessible,
@@ -266,6 +255,12 @@ def search_restroom(request):
         context["data"] = data
         context["data1"] = data2
         context["map"] = url
+        if len(data) == 0:
+                msg = """
+                Seems like there's no restroom matches your requirement completely.
+                Please try again or take a look at the other results.
+                """
+                messages.success(request, f"{msg}")
         return render(request, "naturescall/filtered_search.html", context)
 
 
