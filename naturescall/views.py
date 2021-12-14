@@ -6,9 +6,11 @@ from naturescall.models import (
     Transaction,
     Flag,
 )
+from django.db import connection
 from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponseRedirect, Http404
+from json import dumps
 
 # from .forms import LocationForm
 from .forms import (
@@ -537,15 +539,57 @@ def claim_restroom(request, r_id):
     return render(request, "naturescall/claim_restroom.html", context)
 
 
+def dictfetchall(cursor):
+    "Helper function: Return all rows from a cursor as a dict"
+    columns = [col[0] for col in cursor.description]
+    return [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+
+def top_business_query():
+    "Helper function: transaction SQL query"
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """SELECT coupon_id_id AS coupon_id, count(*)
+            AS count FROM naturescall_transaction
+            GROUP BY coupon_id_id
+            ORDER BY count(*) DESC LIMIT 5"""
+        )
+        row = dictfetchall(cursor)
+    return row
+
+
+def coupon_to_restroom(sale_data):
+    "Helper function that adds restroom_id to each business in sale_data"
+    for business in sale_data:
+        coupon_id = business["coupon_id"]
+        coupon = Coupon.objects.get(id=coupon_id)
+        restroom = coupon.cr_id.restroom_id
+        business["restroom_id"] = restroom.id
+        business["restroom_name"] = restroom.title
+
+
+def create_graph_data(sale_data):
+    res_list = []
+    sale_list = []
+    for business in sale_data:
+        res_list.append(business["restroom_name"])
+        sale_list.append(business["count"])
+    data = [res_list, sale_list]
+    return data
+
+
 @login_required
 def admin_page(request):
+    "parsing logic for the custom admin page"
     current_user = request.user
     if not current_user.is_superuser:
         raise Http404("Access Denied!!!")
-    # transaction_set = Transaction.objects.all()
-    transaction_set = Transaction.objects.raw("SELECT * FROM naturescall_transaction")
+    sale_data = top_business_query()
+    coupon_to_restroom(sale_data)
+    transaction_set = Transaction.objects.all()
     transaction_number = len(transaction_set)
-    context = {"revenue": transaction_number}
+    dataJSON = dumps(create_graph_data(sale_data))
+    context = {"revenue": transaction_number, "sale_data": sale_data, "data": dataJSON}
     return render(request, "naturescall/admin_page.html", context)
 
 
