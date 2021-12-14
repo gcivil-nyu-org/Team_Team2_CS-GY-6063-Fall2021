@@ -96,8 +96,13 @@ def view_profile(request):
         is_admin = True
     ratings = Rating.objects.filter(user_id=current_user)
     claims = ClaimedRestroom.objects.filter(user_id=current_user, verified=True)
-    context = {"u_form": u_form, "p_form": p_form, "ratings": ratings,
-    "claims": claims, "is_admin" : is_admin}
+    context = {
+        "u_form": u_form,
+        "p_form": p_form,
+        "ratings": ratings,
+        "claims": claims,
+        "is_admin": is_admin,
+    }
     return render(request, "accounts/profile.html", context)
 
 
