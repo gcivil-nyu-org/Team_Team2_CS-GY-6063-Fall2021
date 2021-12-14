@@ -557,14 +557,16 @@ def top_business_query():
         row = dictfetchall(cursor)
     return row
 
+
 def coupon_to_restroom(sale_data):
     "Helper function that adds restroom_id to each business in sale_data"
     for business in sale_data:
         coupon_id = business["coupon_id"]
-        coupon = Coupon.objects.get(id = coupon_id)
+        coupon = Coupon.objects.get(id=coupon_id)
         restroom = coupon.cr_id.restroom_id
         business["restroom_id"] = restroom.id
         business["restroom_name"] = restroom.title
+
 
 def create_graph_data(sale_data):
     res_list = []
@@ -574,6 +576,7 @@ def create_graph_data(sale_data):
         sale_list.append(business["count"])
     data = [res_list, sale_list]
     return data
+
 
 @login_required
 def admin_page(request):
@@ -586,10 +589,7 @@ def admin_page(request):
     transaction_set = Transaction.objects.all()
     transaction_number = len(transaction_set)
     dataJSON = dumps(create_graph_data(sale_data))
-    context = {
-        "revenue": transaction_number,
-        "sale_data" : sale_data,
-        "data" : dataJSON}
+    context = {"revenue": transaction_number, "sale_data": sale_data, "data": dataJSON}
     return render(request, "naturescall/admin_page.html", context)
 
 
