@@ -223,9 +223,7 @@ class ViewTests(TestCase):
         self.client.get(reverse("naturescall:rate_restroom", args=(1,)))
         response = self.client.post(
             reverse("naturescall:rate_restroom", args=(1,)),
-            data={
-                "rating": "4", "headline": "headline1", "comment": "comment1",
-            },
+            data={"rating": "4", "headline": "headline1", "comment": "comment1",},
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(len(Rating.objects.all()), 1)
@@ -275,9 +273,7 @@ class ViewTests(TestCase):
         )
         response = self.client.post(
             reverse("naturescall:rate_restroom", args=(1,)),
-            data={
-                "rating": "2", "headline": "headline2", "comment": "comment2",
-            },
+            data={"rating": "2", "headline": "headline2", "comment": "comment2",},
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(len(Rating.objects.all()), 1)
@@ -554,9 +550,7 @@ class ViewTests(TestCase):
         rr = create_restroom(yelp_id, desc)
         response = self.client.post(
             reverse("naturescall:claim_restroom", args=(1,)),
-            data={
-                "restroom_id": rr, "user_id": user,
-            },
+            data={"restroom_id": rr, "user_id": user,},
         )
         self.assertEqual(response.status_code, 302)
 
