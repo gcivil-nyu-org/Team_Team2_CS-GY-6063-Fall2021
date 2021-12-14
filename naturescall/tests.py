@@ -147,30 +147,29 @@ class ViewTests(TestCase):
     def test_restroom_valid_search_empty_database(self):
         """
         A search with a valid search string with an empty database
-        should return a valid webpage with 20 "Add Restroom" results
+        should return a valid webpage with 20 "Add This Restroom" results
         """
         response = self.client.get(
             reverse("naturescall:search_restroom"),
             data={"searched": "washington square park"},
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(str(response.content).count("Add Restroom"), 20)
+        self.assertEqual(str(response.content).count("Add This Restroom"), 20)
 
     def test_restroom_valid_search_one_element_database(self):
         """
         A search with a valid search string with a database with one element
-        should return a valid webpage with 19 "Add Restroom" results
+        should return a valid webpage with 19 "Add This Restroom" results
         """
         desc = "TEST DESCRIPTION"
         yelp_id = "FkA9aoMhWO4XKFMTuTnl4Q"
         create_restroom(yelp_id, desc)
         response = self.client.get(
             reverse("naturescall:search_restroom"),
-            data={"searched": "washigton square park"},
+            data={"searched": "washington square park"},
         )
         self.assertEqual(response.status_code, 200)
-        len_check_var = str(response.content).count("Add Restroom") > 1
-        # self.assertEqual(str(response.content).count("Add Restroom"), 19)
+        len_check_var = str(response.content).count("Add This Restroom") > 1
         self.assertEqual(len_check_var, True)
 
     def test_get_request_add_restroom_not_logged_in(self):
@@ -377,7 +376,7 @@ class ViewTests(TestCase):
         Restroom.objects.create(yelp_id="6FIzpXy82HBT3KZaiA38-Q", description="test")
         response = self.client.get(
             reverse("naturescall:search_restroom"),
-            data={"searched": "washigton square park"},
+            data={"searched": "washington square park"},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["data"]), 20)
@@ -387,21 +386,16 @@ class ViewTests(TestCase):
         create_Coupon(self)
         user = auth.get_user(self.client)
         self.assertEqual(user.is_authenticated, False)
-        # yelp_id = "FkA9aoMhWO4XKFMTuTnl4Q"
-        # desc = "TEST Accessibile= true"
         Restroom.objects.create(yelp_id="6FIzpXy82HBT3KZaiA38-Q", description="test")
         session = self.client.session
-        session["search_location"] = "washigton square park"
+        session["search_location"] = "washington square park"
         session.save()
-        # rr= Restroom.objects.all()
-        # Restroom.objects.create(yelp_id='6FIzpXy82HBT3KZaiA38-Q', description='test')
         data = {
             "location": session["search_location"],
             "accessible": True,
             "family_friendly": False,
             "transaction_not_required": False,
         }
-        # data1 = {"searched": "washigton square park"}
         response = self.client.get(reverse("naturescall:search_restroom"), data=data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["data"]), 1)
@@ -411,8 +405,6 @@ class ViewTests(TestCase):
 
     def test_authenticated_user_search_restroom(self):
         """testing search result for authenticated user"""
-        # yelp_id = "FkA9aoMhWO4XKFMTuTnl4Q"
-        # desc = "TEST Accessibile= true"
         create_Coupon(self)
         user = auth.get_user(self.client)
         self.assertEqual(user.is_authenticated, False)
@@ -429,7 +421,7 @@ class ViewTests(TestCase):
                 "transaction_not_required": "False",
             },
         )
-        data1 = {"searched": "washigton square park"}
+        data1 = {"searched": "washington square park"}
         response = self.client.get(reverse("naturescall:search_restroom"), data=data1)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["data"]), 1)
