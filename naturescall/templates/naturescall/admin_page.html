@@ -6,58 +6,58 @@
     <script src="https://cdn.zingchart.com/zingchart.min.js"></script>
   </head>
   <body>
-    <h2>Hi, This is admin page</h2>
-    <h1>Total revenue is {{revenue}} $</h1>
+    <h2>Business Stats Page</h2>
+    <h1>Total transactions is {{revenue}} times</h1>
 
     <!-- Chart Placement[2] -->
-  <div id="myChart"></div>
+    <div id="myChart"></div>
 
-  <script>
-    var data = JSON.parse("{{data|escapejs}}");
-    let myConfig = {
-      type: 'bar',
-      title: {
-        text: 'Top lucrative restrooms',
-        fontSize: 24,
-      },
-      legend: {
-        draggable: true,
-      },
-      scaleX: {
-        // Set scale label
-        label: { text: 'Restrooms' },
-        // Convert text on scale indices
-        labels: data[0]
-      },
-      scaleY: {
-        // Scale label with unicode character
-        label: { text: 'revenue($)' }
-      },
-      plot: {
-        // Animation docs here:
-        // https://www.zingchart.com/docs/tutorials/styling/animation#effect
-        animation: {
-          effect: 'ANIMATION_EXPAND_BOTTOM',
-          method: 'ANIMATION_STRONG_EASE_OUT',
-          sequence: 'ANIMATION_BY_NODE',
-          speed: 275,
-        }
-      },
-      series: [
-        {
-          // Plot 1 values, linear data
-          values: data[1],
-          text: 'Restooms',
+    <script>
+      var data = JSON.parse("{{data|escapejs}}");
+      let myConfig = {
+        type: 'bar',
+        title: {
+          text: 'Top lucrative restrooms',
+          fontSize: 24,
         },
-      ]
-    };
+        legend: {
+          draggable: true,
+        },
+        scaleX: {
+          // Set scale label
+          label: { text: 'Restrooms' },
+          // Convert text on scale indices
+          labels: data[0]
+        },
+        scaleY: {
+          // Scale label with unicode character
+          label: { text: 'Transaction(s)' }
+        },
+        plot: {
+          // Animation docs here:
+          // https://www.zingchart.com/docs/tutorials/styling/animation#effect
+          animation: {
+            effect: 'ANIMATION_EXPAND_BOTTOM',
+            method: 'ANIMATION_STRONG_EASE_OUT',
+            sequence: 'ANIMATION_BY_NODE',
+            speed: 275,
+          }
+        },
+        series: [
+          {
+            // Plot 1 values, linear data
+            values: data[1],
+            text: 'Restooms',
+          },
+        ]
+      };
 
-    // Render Method[3]
-    zingchart.render({
-      id: 'myChart',
-      data: myConfig,
-    });
-  </script>
+      // Render Method[3]
+      zingchart.render({
+        id: 'myChart',
+        data: myConfig,
+      });
+    </script>
   
   </body>
 </html>

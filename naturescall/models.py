@@ -11,7 +11,6 @@ class Restroom(models.Model):
     # https://github.com/Yelp/yelp-fusion/issues/183
     yelp_id = models.CharField(max_length=100)
     description = models.TextField(blank=False, null=False)
-    # last_modified = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
     accessible = models.BooleanField(default=False)
     family_friendly = models.BooleanField(default=False)

@@ -479,10 +479,6 @@ def get_qr(request, c_id):
     current_coupon = get_object_or_404(Coupon, id=c_id)
     current_restroom = current_coupon.cr_id.restroom_id
     res_title = current_restroom.title
-    # url_string = "http://127.0.0.1:8000/qr_confirm/"
-    # + str(c_id) +'/' + str(request.user.id)
-    # url_string = request.build_absolute_uri() + "/qr_confirm/"
-    # + str(c_id) +'/' + str(request.user.id)
     url_string = (
         request.build_absolute_uri("/qr_confirm/")
         + str(c_id)
@@ -495,12 +491,6 @@ def get_qr(request, c_id):
 
 @login_required(login_url="login")
 def qr_confirm(request, c_id, u_id):
-    # restroom = ClaimedRestroom.objects.filter(
-    #     id=Coupon.objects.filter(id=c_id)[0].cr_id.id
-    # )[0].restroom_id
-    # r_id = restroom.id
-    # res_querySet = Restroom.objects.filter(id=r_id)
-    # res_title = res_querySet.values()[0]["title"]
     current_coupon = get_object_or_404(Coupon, id=c_id)
     current_user = get_object_or_404(User, id=u_id)
     current_restroom = current_coupon.cr_id.restroom_id
@@ -508,8 +498,6 @@ def qr_confirm(request, c_id, u_id):
 
     context = {"title": res_title, "description": current_coupon.description}
 
-    # coupon = Coupon.objects.filter(id=c_id)[0]
-    # user = User.objects.get(id=u_id)
     transaction = Transaction(coupon_id=current_coupon, user_id=current_user)
     transaction.save()
     return render(request, "naturescall/qr_confirm.html", context)
