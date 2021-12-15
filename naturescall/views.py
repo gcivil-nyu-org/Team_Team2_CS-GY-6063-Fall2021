@@ -6,11 +6,12 @@ from naturescall.models import (
     Transaction,
     Flag,
 )
+from django.db import connection
 from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponseRedirect, Http404
+from json import dumps
 
-# from .forms import LocationForm
 from .forms import (
     AddRestroom,
     AddRating,
@@ -24,19 +25,11 @@ from django.contrib.auth.decorators import login_required
 from .filters import RestroomFilter
 from django.contrib import messages
 from urllib.parse import urlencode
-
-# import argparse
-# import json
-# import sys
-# import urllib
-# from urllib.error import HTTPError
 from urllib.parse import quote
 
-# from urllib.parse import urlencode
 import os
 from django.urls import reverse
 
-# import datetime
 
 api_key = str(os.getenv("yelp_key"))
 map_embedded_key = str(os.getenv("map_embedded"))
@@ -68,7 +61,6 @@ def search_restroom(request):
         location = request.GET["searched"]
         if not request.user.is_authenticated:
             map = str(os.getenv("map"))
-            # location = request.GET["searched"]
             tableFilter = RestroomFilter()
             k = search(api_key, '"restroom","food","public"', location, 20)
             data = []
@@ -122,7 +114,6 @@ def search_restroom(request):
             return render(request, "naturescall/search_restroom.html", context)
         else:
             dbRestroom = Restroom.objects.all()
-            # location = request.GET["searched"]
             profile = request.user.profile
             d = {
                 "accessible": profile.accessible,
@@ -264,6 +255,12 @@ def search_restroom(request):
         context["data"] = data
         context["data1"] = data2
         context["map"] = url
+        if len(data) == 0:
+                msg = """
+                Seems like there's no restroom matches your requirement completely.
+                Please try again or take a look at the other results.
+                """
+                messages.success(request, f"{msg}")
         return render(request, "naturescall/filtered_search.html", context)
 
 
@@ -477,10 +474,6 @@ def get_qr(request, c_id):
     current_coupon = get_object_or_404(Coupon, id=c_id)
     current_restroom = current_coupon.cr_id.restroom_id
     res_title = current_restroom.title
-    # url_string = "http://127.0.0.1:8000/qr_confirm/"
-    # + str(c_id) +'/' + str(request.user.id)
-    # url_string = request.build_absolute_uri() + "/qr_confirm/"
-    # + str(c_id) +'/' + str(request.user.id)
     url_string = (
         request.build_absolute_uri("/qr_confirm/")
         + str(c_id)
@@ -493,12 +486,6 @@ def get_qr(request, c_id):
 
 @login_required(login_url="login")
 def qr_confirm(request, c_id, u_id):
-    # restroom = ClaimedRestroom.objects.filter(
-    #     id=Coupon.objects.filter(id=c_id)[0].cr_id.id
-    # )[0].restroom_id
-    # r_id = restroom.id
-    # res_querySet = Restroom.objects.filter(id=r_id)
-    # res_title = res_querySet.values()[0]["title"]
     current_coupon = get_object_or_404(Coupon, id=c_id)
     current_user = get_object_or_404(User, id=u_id)
     current_restroom = current_coupon.cr_id.restroom_id
@@ -506,8 +493,6 @@ def qr_confirm(request, c_id, u_id):
 
     context = {"title": res_title, "description": current_coupon.description}
 
-    # coupon = Coupon.objects.filter(id=c_id)[0]
-    # user = User.objects.get(id=u_id)
     transaction = Transaction(coupon_id=current_coupon, user_id=current_user)
     transaction.save()
     return render(request, "naturescall/qr_confirm.html", context)
@@ -537,15 +522,57 @@ def claim_restroom(request, r_id):
     return render(request, "naturescall/claim_restroom.html", context)
 
 
+def dictfetchall(cursor):
+    "Helper function: Return all rows from a cursor as a dict"
+    columns = [col[0] for col in cursor.description]
+    return [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+
+def top_business_query():
+    "Helper function: transaction SQL query"
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """SELECT coupon_id_id AS coupon_id, count(*)
+            AS count FROM naturescall_transaction
+            GROUP BY coupon_id_id
+            ORDER BY count(*) DESC LIMIT 5"""
+        )
+        row = dictfetchall(cursor)
+    return row
+
+
+def coupon_to_restroom(sale_data):
+    "Helper function that adds restroom_id to each business in sale_data"
+    for business in sale_data:
+        coupon_id = business["coupon_id"]
+        coupon = Coupon.objects.get(id=coupon_id)
+        restroom = coupon.cr_id.restroom_id
+        business["restroom_id"] = restroom.id
+        business["restroom_name"] = restroom.title
+
+
+def create_graph_data(sale_data):
+    res_list = []
+    sale_list = []
+    for business in sale_data:
+        res_list.append(business["restroom_name"])
+        sale_list.append(business["count"])
+    data = [res_list, sale_list]
+    return data
+
+
 @login_required
 def admin_page(request):
+    "parsing logic for the custom admin page"
     current_user = request.user
     if not current_user.is_superuser:
         raise Http404("Access Denied!!!")
-    # transaction_set = Transaction.objects.all()
-    transaction_set = Transaction.objects.raw("SELECT * FROM naturescall_transaction")
+    sale_data = top_business_query()
+    coupon_to_restroom(sale_data)
+    transaction_set = Transaction.objects.all()
     transaction_number = len(transaction_set)
-    context = {"revenue": transaction_number}
+    dataJSON = dumps(create_graph_data(sale_data))
+    context = {"revenue": transaction_number, "sale_data": sale_data, "data": dataJSON}
     return render(request, "naturescall/admin_page.html", context)
 
 

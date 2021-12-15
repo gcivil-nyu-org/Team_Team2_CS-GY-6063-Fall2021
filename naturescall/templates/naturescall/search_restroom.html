@@ -47,7 +47,11 @@
 					{% else %}
 					<p class="card-text">{{d.addr}}</p>
 					<p class="card-text" style="color:DodgerBlue;">{{d.distance}} meters away</p>
-					<a href="{% url 'naturescall:add_restroom' d.id %}" class="btn btn-info">Add Restroom</a>
+					<p class="card-text">
+						Is there a restroom here? Please
+						<a href="{% url 'naturescall:add_restroom' d.id %}" class="btn btn-info">Add This Restroom</a>
+						so you can share the details with others!
+					</p>
 					{% endif %}
 				</div>
 			</div>

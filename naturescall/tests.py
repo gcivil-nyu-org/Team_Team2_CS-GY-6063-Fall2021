@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.messages import get_messages
-from .models import Restroom, Rating, ClaimedRestroom, Coupon, Flag
+from .models import Restroom, Rating, ClaimedRestroom, Coupon, Flag, Transaction
 from .filters import RestroomFilter
 import os
 from django.contrib import auth
@@ -147,30 +147,29 @@ class ViewTests(TestCase):
     def test_restroom_valid_search_empty_database(self):
         """
         A search with a valid search string with an empty database
-        should return a valid webpage with 20 "Add Restroom" results
+        should return a valid webpage with 20 "Add This Restroom" results
         """
         response = self.client.get(
             reverse("naturescall:search_restroom"),
             data={"searched": "washington square park"},
         )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(str(response.content).count("Add Restroom"), 20)
+        self.assertEqual(str(response.content).count("Add This Restroom"), 20)
 
     def test_restroom_valid_search_one_element_database(self):
         """
         A search with a valid search string with a database with one element
-        should return a valid webpage with 19 "Add Restroom" results
+        should return a valid webpage with 19 "Add This Restroom" results
         """
         desc = "TEST DESCRIPTION"
         yelp_id = "FkA9aoMhWO4XKFMTuTnl4Q"
         create_restroom(yelp_id, desc)
         response = self.client.get(
             reverse("naturescall:search_restroom"),
-            data={"searched": "washigton square park"},
+            data={"searched": "washington square park"},
         )
         self.assertEqual(response.status_code, 200)
-        len_check_var = str(response.content).count("Add Restroom") > 1
-        # self.assertEqual(str(response.content).count("Add Restroom"), 19)
+        len_check_var = str(response.content).count("Add This Restroom") > 1
         self.assertEqual(len_check_var, True)
 
     def test_get_request_add_restroom_not_logged_in(self):
@@ -377,7 +376,7 @@ class ViewTests(TestCase):
         Restroom.objects.create(yelp_id="6FIzpXy82HBT3KZaiA38-Q", description="test")
         response = self.client.get(
             reverse("naturescall:search_restroom"),
-            data={"searched": "washigton square park"},
+            data={"searched": "washington square park"},
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["data"]), 20)
@@ -387,21 +386,16 @@ class ViewTests(TestCase):
         create_Coupon(self)
         user = auth.get_user(self.client)
         self.assertEqual(user.is_authenticated, False)
-        # yelp_id = "FkA9aoMhWO4XKFMTuTnl4Q"
-        # desc = "TEST Accessibile= true"
         Restroom.objects.create(yelp_id="6FIzpXy82HBT3KZaiA38-Q", description="test")
         session = self.client.session
-        session["search_location"] = "washigton square park"
+        session["search_location"] = "washington square park"
         session.save()
-        # rr= Restroom.objects.all()
-        # Restroom.objects.create(yelp_id='6FIzpXy82HBT3KZaiA38-Q', description='test')
         data = {
             "location": session["search_location"],
             "accessible": True,
             "family_friendly": False,
             "transaction_not_required": False,
         }
-        # data1 = {"searched": "washigton square park"}
         response = self.client.get(reverse("naturescall:search_restroom"), data=data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["data"]), 1)
@@ -411,8 +405,6 @@ class ViewTests(TestCase):
 
     def test_authenticated_user_search_restroom(self):
         """testing search result for authenticated user"""
-        # yelp_id = "FkA9aoMhWO4XKFMTuTnl4Q"
-        # desc = "TEST Accessibile= true"
         create_Coupon(self)
         user = auth.get_user(self.client)
         self.assertEqual(user.is_authenticated, False)
@@ -429,7 +421,7 @@ class ViewTests(TestCase):
                 "transaction_not_required": "False",
             },
         )
-        data1 = {"searched": "washigton square park"}
+        data1 = {"searched": "washington square park"}
         response = self.client.get(reverse("naturescall:search_restroom"), data=data1)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.context["data"]), 1)
@@ -647,9 +639,7 @@ class ViewTests(TestCase):
         yelp_id = "E6h-sMLmF86cuituw5zYxw"
         rr = create_restroom(yelp_id, desc)
         ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
-        response = self.client.get(
-            reverse("naturescall:manage_restroom", args=(1,)),
-        )
+        response = self.client.get(reverse("naturescall:manage_restroom", args=(1,)),)
         self.assertEqual(response.status_code, 200)
 
     def test_manage_restroom_unauthorized(self):
@@ -664,9 +654,7 @@ class ViewTests(TestCase):
         ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
         user1 = User.objects.create_user("Jon1", "jon1@email.com")
         self.client.force_login(user=user1)
-        response = self.client.get(
-            reverse("naturescall:manage_restroom", args=(1,)),
-        )
+        response = self.client.get(reverse("naturescall:manage_restroom", args=(1,)),)
         self.assertEqual(response.status_code, 404)
 
     def test_comment_responses_authorized(self):
@@ -679,9 +667,7 @@ class ViewTests(TestCase):
         yelp_id = "E6h-sMLmF86cuituw5zYxw"
         rr = create_restroom(yelp_id, desc)
         ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
-        response = self.client.get(
-            reverse("naturescall:comment_responses", args=(1,)),
-        )
+        response = self.client.get(reverse("naturescall:comment_responses", args=(1,)),)
         self.assertEqual(response.status_code, 200)
 
     def test_comment_responses_unauthorized(self):
@@ -696,9 +682,7 @@ class ViewTests(TestCase):
         ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
         user1 = User.objects.create_user("Jon1", "jon1@email.com")
         self.client.force_login(user=user1)
-        response = self.client.get(
-            reverse("naturescall:comment_responses", args=(1,)),
-        )
+        response = self.client.get(reverse("naturescall:comment_responses", args=(1,)),)
         self.assertEqual(response.status_code, 404)
 
     def test_comment_response_authorized_and_unauthorized(self):
@@ -720,13 +704,9 @@ class ViewTests(TestCase):
             headline="headline1",
             comment="comment1",
         )
-        response = self.client.get(
-            reverse("naturescall:comment_response", args=(1,)),
-        )
+        response = self.client.get(reverse("naturescall:comment_response", args=(1,)),)
         self.client.force_login(user1)
-        response1 = self.client.get(
-            reverse("naturescall:comment_response", args=(1,)),
-        )
+        response1 = self.client.get(reverse("naturescall:comment_response", args=(1,)),)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response1.status_code, 404)
 
@@ -769,9 +749,7 @@ class ViewTests(TestCase):
         rr = create_restroom(yelp_id, desc)
         cr = ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
         coupon = Coupon.objects.create(cr_id=cr, description=desc)
-        response = self.client.get(
-            reverse("naturescall:get_qr", args=(coupon.id,)),
-        )
+        response = self.client.get(reverse("naturescall:get_qr", args=(coupon.id,)),)
         self.assertEqual(response.status_code, 200)
 
     def test_confirm_qr(self):
@@ -988,3 +966,19 @@ class ViewTests(TestCase):
         self.client.force_login(user=user)
         response = self.client.get(reverse("naturescall:flag_comment", args=(1,)))
         self.assertEqual(response.status_code, 404)
+
+    def test_admin_page(self):
+        """
+        Superuser is able to view the cutomized admin page
+        """
+        user = User.objects.create_superuser("myuser", "myemail@test.com", "abcd12345")
+        self.client.force_login(user=user)
+        desc = "TEST DESCRIPTION"
+        yelp_id = "E6h-sMLmF86cuituw5zYxw"
+        rr = create_restroom(yelp_id, desc)
+        cr = ClaimedRestroom.objects.create(restroom_id=rr, user_id=user, verified=True)
+        coupon = Coupon.objects.create(cr_id=cr, description=desc)
+        transaction = Transaction.objects.create(coupon_id=coupon, user_id=user)
+        transaction.coupon_id = coupon
+        response = self.client.get(reverse("naturescall:admin_page"))
+        self.assertEqual(response.status_code, 200)
