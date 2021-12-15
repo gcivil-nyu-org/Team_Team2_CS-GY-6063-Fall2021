@@ -256,11 +256,11 @@ def search_restroom(request):
         context["data1"] = data2
         context["map"] = url
         if len(data) == 0:
-                msg = """
+            msg = """
                 Seems like there's no restroom matches your requirement completely.
                 Please try again or take a look at the other results.
                 """
-                messages.success(request, f"{msg}")
+            messages.success(request, f"{msg}")
         return render(request, "naturescall/filtered_search.html", context)
 
 
